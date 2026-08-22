@@ -3,7 +3,7 @@ const { trace, formatTable } = require('./trace');
 const lens = require('./lens');
 const VERSION = require('../package.json').version;
 function help() {
-  return 'smart-git v' + VERSION + ' - paste stacktrace -> ranked culprit\n\nUsage:\n  smart-git trace ["<stacktrace string>"] [--stacktrace <file>] [--limit N] [--json] [--oneline] [--verbose]\n    Reads stacktrace from file, raw string, or stdin (pipe).\n  smart-git lens <hash> --preview        create worktree at hash\n  smart-git lens --exit [path]           remove lens worktree\n  smart-git --help | --version\n\nExamples:\n  npm start 2>&1 | smart-git trace\n  smart-git trace --stacktrace crash.log --json\n  smart-git trace "Error at foo (src/app.js:42:10)" --json\n  smart-git lens abc123 --preview';
+  return 'smart-git v' + VERSION + ' - paste stacktrace -> ranked culprit\n\nUsage:\n  smart-git trace ["<stacktrace string>"] [--stacktrace <file>] [--limit N] [--json] [--oneline] [--verbose]\n    Reads stacktrace from file, raw string, or stdin (pipe).\n  smart-git lens <hash> --preview        create worktree at hash\n  smart-git lens --exit [path]           remove lens worktree\n  smart-git --help | --version\n\nExamples:\n  npm start 2>&1 | smart-git trace\n  smart-git trace --stacktrace crash.log --json\n  smart-git trace "Error at foo (src/app.js:42:10)" --json\n  smart-git trace Exception in thread "main" java.lang.NullPointerException at com.example.App.calculateTotal(App.java:9)\n  smart-git lens abc123 --preview';
 }
 function parseArgs(argv) {
   const args = [...argv];
@@ -46,11 +46,15 @@ function parseArgs(argv) {
 }
 async function readInput(stacktracePath, raw) {
   const NL = String.fromCharCode(92) + 'n';
-  // ponytail: if raw string contains literal \n, convert to real newline
-  if (raw) return raw.split(NL).join(String.fromCharCode(10));
+  const toText = s => s.split(NL).join(String.fromCharCode(10));
+  if (raw && stacktracePath) {
+    try { if (fs.existsSync(stacktracePath)) return fs.readFileSync(stacktracePath, 'utf8'); } catch {}
+    return toText(stacktracePath + ' ' + raw);
+  }
+  if (raw) return toText(raw);
   if (stacktracePath) {
     try { if (fs.existsSync(stacktracePath)) return fs.readFileSync(stacktracePath, 'utf8'); } catch {}
-    return stacktracePath.split(NL).join(String.fromCharCode(10));
+    return toText(stacktracePath);
   }
   if (process.stdin.isTTY) return '';
   return fs.readFileSync(0, 'utf8');
