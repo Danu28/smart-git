@@ -10,11 +10,11 @@ function trace(stacktraceText, opts = {}) {
   for (const loc of locations) {
     const candidates = [loc.file, loc.file.split('/').pop()];
     let trackedFile = null;
+    let allFiles = [];
+    try { allFiles = git.sh('git ls-files', { cwd: root }).split(String.fromCharCode(10)).filter(Boolean); } catch {}
     for (const f of candidates) {
-      try {
-        const out = git.sh('git ls-files | grep -F "' + f + '" | head -n 1', { cwd: root });
-        if (out) { trackedFile = out.trim(); break; }
-      } catch {}
+      const hit = allFiles.find(x => x === f || x.endsWith('/' + f));
+      if (hit) { trackedFile = hit; break; }
       if (git.isTracked(f, root)) { trackedFile = f; break; }
     }
     if (!trackedFile) trackedFile = loc.file;

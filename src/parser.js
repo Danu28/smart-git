@@ -25,6 +25,7 @@ function parseStacktrace(text) {
     while ((m = generic.exec(text)) !== null) {
       let file = m[1]; let line = +m[2];
       if (line > 50000) continue;
+      if (file.includes('node_modules')) continue;
       let key = file + ':' + line;
       if (!seen.has(key)) { seen.set(key, true); res.push({ file, line }); }
     }

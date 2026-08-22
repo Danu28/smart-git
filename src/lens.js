@@ -13,7 +13,7 @@ function exitLens(dest) {
     const root = git.gitRoot();
     const list = git.worktreeList(root);
     const lines = list.split(String.fromCharCode(10));
-    for (const l of lines) { if (l.includes('smart-git-lens')) { dest = l.replace('worktree ','').trim(); break; } }
+    for (const l of lines) { if (l.startsWith('worktree ') && l.includes('smart-git-lens')) { dest = l.slice(9).trim(); break; } }
   }
   if (!dest) throw new Error('No lens worktree found. Pass dest path.');
   const root = git.gitRoot();

@@ -14,8 +14,8 @@ function parseArgs(argv) {
   if (cmd === 'trace') {
     while (args.length) {
       const a = args.shift();
-      if (a === '--stacktrace' || a === '-f') opts.stacktrace = args.shift();
-      else if (a === '--limit') opts.limit = parseInt(args.shift(),10) || 10;
+      if (a === '--stacktrace' || a === '-f') { const v=args.shift(); if(v===undefined){ console.error('Missing value for --stacktrace'); process.exit(2);} opts.stacktrace=v; }
+      else if (a === '--limit') { const v=args.shift(); const n=parseInt(v,10); if(!Number.isInteger(n)||n<1||n>100){ console.error('Invalid --limit '+v); process.exit(2);} opts.limit=n; }
       else if (a === '--json') opts.json = true;
       else if (a === '--oneline') opts.oneline = true;
       else if (a === '--verbose') opts.verbose = true;
@@ -41,7 +41,7 @@ function parseArgs(argv) {
     if (preview && hash) return { cmd: 'lens-preview', hash };
     return { cmd: 'help' };
   }
-  if (cmd === '--stacktrace') return { cmd: 'trace', opts: { ...opts, stacktrace: args.shift() } };
+  if (cmd === '--stacktrace') return { cmd: 'trace', opts: { ...opts, stacktrace: args.shift() ?? null, raw: null } };
   return { cmd: 'help' };
 }
 async function readInput(stacktracePath, raw) {
