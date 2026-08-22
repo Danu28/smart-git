@@ -2,7 +2,7 @@ const { parseStacktrace } = require('./parser');
 const git = require('./git');
 function trace(stacktraceText, opts = {}) {
   const root = git.gitRoot();
-  const locations = parseStacktrace(stacktraceText);
+  const locations = parseStacktrace(stacktraceText).slice(0, 20); // ponytail: cap 20 stack frames, raise if needed
   if (locations.length === 0) return { root, locations: [], culprits: [], error: 'No file:line found in stacktrace' };
   const max = opts.limit || 10;
   const culprits = [];

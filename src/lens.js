@@ -2,6 +2,7 @@ const path = require('path');
 const os = require('os');
 const git = require('./git');
 function preview(hash, opts = {}) {
+  if (!/^[0-9a-f]{7,40}$/i.test(hash)) throw new Error('Invalid hash');
   const root = git.gitRoot();
   const tmp = path.join(os.tmpdir(), 'smart-git-lens-' + hash.slice(0,8) + '-' + Date.now());
   git.worktreeAdd(hash, tmp, root);
