@@ -1,0 +1,11 @@
+node_modules/
+.harness/
+.env
+.env.*
+*.log
+crash.log
+.DS_Store
+Thumbs.db
+coverage/
+dist/
+npm-debug.log*

@@ -1,0 +1,15 @@
+{
+  "name": "smart-git",
+  "version": "1.0.0",
+  "description": "Paste stacktrace → ranked culprit commit in 10s",
+  "bin": {
+    "smart-git": "./bin/smart-git"
+  },
+  "type": "commonjs",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": ["git", "blame", "szz", "stacktrace"],
+  "license": "MIT"
+}
