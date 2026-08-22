@@ -32,3 +32,14 @@ test('parseArgs help/version', () => {
   assert.equal(parseArgs([]).cmd, 'help');
   assert.equal(parseArgs(['--version']).cmd, 'version');
 });
+
+test('parseArgs trace raw string in quotes', () => {
+  const r = parseArgs(['trace', 'Error at foo (src/app.js:1:2)']);
+  assert.equal(r.opts.raw, 'Error at foo (src/app.js:1:2)');
+  const r2 = parseArgs(['trace', 'Error at foo (src/app.js:1:2)', '--json']);
+  assert.equal(r2.opts.raw, 'Error at foo (src/app.js:1:2)');
+  assert.equal(r2.opts.json, true);
+  // --stacktrace with raw string (file does not exist, treated as raw in readInput)
+  const r3 = parseArgs(['trace', '--stacktrace', 'Error at foo (src/app.js:1:2)']);
+  assert.equal(r3.opts.stacktrace, 'Error at foo (src/app.js:1:2)');
+});

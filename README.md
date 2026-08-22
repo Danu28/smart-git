@@ -45,6 +45,11 @@ cat crash.log | smart-git trace
 cat crash.log | smart-git trace --oneline
 cat crash.log | smart-git trace --json | jq
 
+# paste raw string in quotes (new)
+smart-git trace "Error at foo (src/app.js:42:10)"
+smart-git trace "Error at foo (src/app.js:42:10)" --json
+smart-git trace --stacktrace "Error at foo (src/app.js:42:10)" --oneline
+
 # from file
 smart-git trace --stacktrace crash.log
 smart-git trace -f crash.log --limit 3 --oneline

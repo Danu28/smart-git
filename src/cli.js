@@ -3,11 +3,11 @@ const { trace, formatTable } = require('./trace');
 const lens = require('./lens');
 const VERSION = require('../package.json').version;
 function help() {
-  return 'smart-git v' + VERSION + ' - paste stacktrace -> ranked culprit\n\nUsage:\n  smart-git trace [--stacktrace <file>] [--limit N] [--json] [--oneline] [--verbose]\n    Reads stacktrace from file or stdin (pipe).\n  smart-git lens <hash> --preview        create worktree at hash\n  smart-git lens --exit [path]           remove lens worktree\n  smart-git --help | --version\n\nExamples:\n  npm start 2>&1 | smart-git trace\n  smart-git trace --stacktrace crash.log --json\n  smart-git lens abc123 --preview';
+  return 'smart-git v' + VERSION + ' - paste stacktrace -> ranked culprit\n\nUsage:\n  smart-git trace ["<stacktrace string>"] [--stacktrace <file>] [--limit N] [--json] [--oneline] [--verbose]\n    Reads stacktrace from file, raw string, or stdin (pipe).\n  smart-git lens <hash> --preview        create worktree at hash\n  smart-git lens --exit [path]           remove lens worktree\n  smart-git --help | --version\n\nExamples:\n  npm start 2>&1 | smart-git trace\n  smart-git trace --stacktrace crash.log --json\n  smart-git trace "Error at foo (src/app.js:42:10)" --json\n  smart-git lens abc123 --preview';
 }
 function parseArgs(argv) {
   const args = [...argv];
-  const opts = { limit: 10, json: false, oneline: false, verbose: false, stacktrace: null };
+  const opts = { limit: 10, json: false, oneline: false, verbose: false, stacktrace: null, raw: null };
   let cmd = args.shift();
   if (!cmd || cmd === '--help' || cmd === '-h') return { cmd: 'help' };
   if (cmd === '--version' || cmd === '-v') return { cmd: 'version' };
@@ -20,6 +20,11 @@ function parseArgs(argv) {
       else if (a === '--oneline') opts.oneline = true;
       else if (a === '--verbose') opts.verbose = true;
       else if (a === '--help' || a === '-h') return { cmd: 'help' };
+      else if (a.startsWith('-')) {}
+      else {
+        opts.raw = opts.raw ? opts.raw + ' ' + a : a;
+        while (args.length && !args[0].startsWith('-')) opts.raw += ' ' + args.shift();
+      }
     }
     return { cmd: 'trace', opts };
   }
@@ -39,8 +44,14 @@ function parseArgs(argv) {
   if (cmd === '--stacktrace') return { cmd: 'trace', opts: { ...opts, stacktrace: args.shift() } };
   return { cmd: 'help' };
 }
-async function readInput(stacktracePath) {
-  if (stacktracePath) return fs.readFileSync(stacktracePath, 'utf8');
+async function readInput(stacktracePath, raw) {
+  const NL = String.fromCharCode(92) + 'n';
+  // ponytail: if raw string contains literal \n, convert to real newline
+  if (raw) return raw.split(NL).join(String.fromCharCode(10));
+  if (stacktracePath) {
+    try { if (fs.existsSync(stacktracePath)) return fs.readFileSync(stacktracePath, 'utf8'); } catch {}
+    return stacktracePath.split(NL).join(String.fromCharCode(10));
+  }
   if (process.stdin.isTTY) return '';
   return fs.readFileSync(0, 'utf8');
 }
@@ -50,8 +61,8 @@ async function main(argv) {
   if (parsed.cmd === 'version') { console.log(VERSION); process.exit(0); }
   try {
     if (parsed.cmd === 'trace') {
-      const text = await readInput(parsed.opts.stacktrace);
-      if (!text || !text.trim()) { console.error('No stacktrace input. Provide --stacktrace <file> or pipe via stdin.'); console.log(help()); process.exit(2); }
+      const text = await readInput(parsed.opts.stacktrace, parsed.opts.raw);
+      if (!text || !text.trim()) { console.error('No stacktrace input. Provide "<stacktrace>" as arg, --stacktrace <file>, or pipe via stdin.'); console.log(help()); process.exit(2); }
       const result = trace(text, parsed.opts);
       if (result.error && result.culprits.length === 0) { console.error(result.error); process.exit(1); }
       if (parsed.opts.json) console.log(JSON.stringify(result, null, 2));
