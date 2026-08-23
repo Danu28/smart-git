@@ -7,11 +7,11 @@ function trace(stacktraceText, opts = {}) {
   const max = opts.limit || 10;
   const culprits = [];
   const seenHash = new Map();
+  let allFiles = [];
+  try { allFiles = git.sh('git ls-files', { cwd: root }).split(String.fromCharCode(10)).filter(Boolean); } catch {}
   for (const loc of locations) {
     const candidates = [loc.file, loc.file.split('/').pop()];
     let trackedFile = null;
-    let allFiles = [];
-    try { allFiles = git.sh('git ls-files', { cwd: root }).split(String.fromCharCode(10)).filter(Boolean); } catch {}
     for (const f of candidates) {
       const hit = allFiles.find(x => x === f || x.endsWith('/' + f));
       if (hit) { trackedFile = hit; break; }

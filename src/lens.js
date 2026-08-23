@@ -9,6 +9,7 @@ function preview(hash, opts = {}) {
   return { root, hash, dest: tmp, snippet: git.sh('git show --stat ' + hash, { cwd: root }).slice(0, 2000) };
 }
 function exitLens(dest) {
+  if (dest && /[`$;|&()<>\n]/.test(dest)) throw new Error('Invalid dest');
   if (!dest) {
     const root = git.gitRoot();
     const list = git.worktreeList(root);

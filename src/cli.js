@@ -35,9 +35,10 @@ function parseArgs(argv) {
       if (a === '--preview') preview = true;
       else if (a === '--exit') exit = true;
       else if (a.startsWith('--')) {}
+      else if (exit && !dest) dest = a;
       else if (!hash) hash = a; else dest = a;
     }
-    if (exit) return { cmd: 'lens-exit', dest };
+    if (exit) return { cmd: 'lens-exit', dest: dest || hash };
     if (preview && hash) return { cmd: 'lens-preview', hash };
     return { cmd: 'help' };
   }

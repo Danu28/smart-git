@@ -8,7 +8,7 @@ function parseStacktrace(text) {
   while ((m = re.exec(text)) !== null) {
     let file = m[1].replace(/^\.\//, '');
     let line = parseInt(m[2], 10);
-    if (!file || !line) continue;
+    if (!file || !line || line < 1 || line > 1000000) continue;
     if (file.includes('node_modules')) continue;
     let key = file + ':' + line;
     if (!seen.has(key)) { seen.set(key, true); res.push({ file, line }); }
@@ -17,6 +17,7 @@ function parseStacktrace(text) {
   while ((m = pyRe.exec(text)) !== null) {
     let file = m[1].replace(/^\.\//, '');
     let line = parseInt(m[2], 10);
+    if (!line || line < 1 || line > 1000000) continue;
     let key = file + ':' + line;
     if (!seen.has(key)) { seen.set(key, true); res.push({ file, line }); }
   }
@@ -24,7 +25,7 @@ function parseStacktrace(text) {
     const generic = /([A-Za-z0-9_.\/\-]+\.[a-z]{2,4}):(\d+)/g;
     while ((m = generic.exec(text)) !== null) {
       let file = m[1]; let line = +m[2];
-      if (line > 50000) continue;
+      if (line < 1 || line > 1000000) continue;
       if (file.includes('node_modules')) continue;
       let key = file + ':' + line;
       if (!seen.has(key)) { seen.set(key, true); res.push({ file, line }); }
