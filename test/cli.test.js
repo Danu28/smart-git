@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseArgs } = require('../src/cli');
+const { parseArgs, readInput } = require('../src/cli');
 
 test('parseArgs trace defaults', () => {
   const r = parseArgs(['trace']);
@@ -31,6 +31,15 @@ test('parseArgs help/version', () => {
   assert.equal(parseArgs(['--help']).cmd, 'help');
   assert.equal(parseArgs([]).cmd, 'help');
   assert.equal(parseArgs(['--version']).cmd, 'version');
+});
+
+test('readInput literal \\n becomes newline', async () => {
+  const r = await readInput(null, 'Error\\nat foo (src/app.js:1:2)');
+  assert.equal(r, 'Error\nat foo (src/app.js:1:2)');
+  const viaMeta = await readInput(null, String.fromCharCode(92) + 'n');
+  assert.equal(viaMeta, '\n');
+  const stdinTTY = await readInput(null, null);
+  assert.equal(stdinTTY, '');
 });
 
 test('parseArgs trace raw string in quotes', () => {

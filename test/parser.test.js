@@ -27,3 +27,10 @@ test('Java and Go', () => {
 test('empty returns empty', () => {
   assert.deepEqual(parseStacktrace('no stack here'), []);
 });
+
+test('ignores non-code file:line noise (no generic fallback)', () => {
+  assert.deepEqual(parseStacktrace('PKG.v1:123 resolver:99 a.bb:4'), []);
+  // still catches explicit known langs incl. rb/php
+  const r = parseStacktrace('at foo (src/t.rb:3)' + '\n' + 'at foo (src/t.php:7)');
+  assert.deepEqual(r, [{file:'src/t.rb', line:3}, {file:'src/t.php', line:7}]);
+});

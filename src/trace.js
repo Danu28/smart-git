@@ -8,14 +8,13 @@ function trace(stacktraceText, opts = {}) {
   const culprits = [];
   const seenHash = new Map();
   let allFiles = [];
-  try { allFiles = git.sh('git ls-files', { cwd: root }).split(String.fromCharCode(10)).filter(Boolean); } catch {}
+  try { allFiles = git.g(['ls-files'], { cwd: root }).split(String.fromCharCode(10)).filter(Boolean); } catch {}
   for (const loc of locations) {
     const candidates = [loc.file, loc.file.split('/').pop()];
     let trackedFile = null;
     for (const f of candidates) {
       const hit = allFiles.find(x => x === f || x.endsWith('/' + f));
       if (hit) { trackedFile = hit; break; }
-      if (git.isTracked(f, root)) { trackedFile = f; break; }
     }
     if (!trackedFile) trackedFile = loc.file;
     let blameHash = null;

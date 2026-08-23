@@ -21,16 +21,6 @@ function parseStacktrace(text) {
     let key = file + ':' + line;
     if (!seen.has(key)) { seen.set(key, true); res.push({ file, line }); }
   }
-  if (res.length === 0) {
-    const generic = /([A-Za-z0-9_.\/\-]+\.[a-z]{2,4}):(\d+)/g;
-    while ((m = generic.exec(text)) !== null) {
-      let file = m[1]; let line = +m[2];
-      if (line < 1 || line > 1000000) continue;
-      if (file.includes('node_modules')) continue;
-      let key = file + ':' + line;
-      if (!seen.has(key)) { seen.set(key, true); res.push({ file, line }); }
-    }
-  }
   return res;
 }
 module.exports = { parseStacktrace };
