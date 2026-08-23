@@ -6,10 +6,9 @@ function preview(hash, opts = {}) {
   const root = git.gitRoot();
   const tmp = path.join(os.tmpdir(), 'smart-git-lens-' + hash.slice(0,8) + '-' + Date.now());
   git.worktreeAdd(hash, tmp, root);
-  return { root, hash, dest: tmp, snippet: git.sh('git show --stat ' + hash, { cwd: root }).slice(0, 2000) };
+  return { root, hash, dest: tmp, snippet: git.g(['show', '--stat', hash], { cwd: root }).slice(0, 2000) };
 }
 function exitLens(dest) {
-  if (dest && /[`$;|&()<>\n]/.test(dest)) throw new Error('Invalid dest');
   if (!dest) {
     const root = git.gitRoot();
     const list = git.worktreeList(root);

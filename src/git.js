@@ -1,8 +1,9 @@
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
-function sh(cmd, opts = {}) {
+// Run git with an argv array (no shell) — kills the command-injection class.
+function g(args, opts = {}) {
   try {
-    return execSync(cmd, { encoding: 'utf8', stdio: ['pipe','pipe','pipe'], ...opts }).trim();
+    return execFileSync('git', args, { encoding: 'utf8', stdio: ['pipe','pipe','pipe'], ...opts }).trim();
   } catch (e) {
     const out = (e.stdout||'') + (e.stderr||'');
     throw new Error(out.trim() || e.message);
@@ -13,65 +14,58 @@ function isSafeHash(h) { return /^[0-9a-f]{7,40}$/i.test(h); }
 function assertSafeHash(h) { if (!isSafeHash(h)) throw new Error('Invalid hash: ' + h); }
 
 function gitRoot(cwd) {
-  return sh('git rev-parse --show-toplevel', cwd ? { cwd } : {});
-}
-
-function isSafeFile(f){ return !/[\n\0`$;|&()<>]/.test(f); }
-function isTracked(file, root) {
-  if (file.includes('\n') || file.includes('\0')) return false;
-  if (!isSafeFile(file)) return false;
-  try { sh(`git ls-files --error-unmatch -- "${file.replace(/"/g,'\\"')}"`, { cwd: root }); return true; }
-  catch { return false; }
+  return g(['rev-parse', '--show-toplevel'], cwd ? { cwd } : {});
 }
 
 function blame(file, line, root) {
   const n = Number(line); if (!Number.isInteger(n) || n < 1 || n > 1000000) return null;
-  if (!isSafeFile(file)) return null;
-  const out = sh(`git blame --porcelain -L ${n},${n} -- "${file.replace(/"/g,'\\"')}"`, { cwd: root });
-  const m = out.match(/^([0-9a-f]{40})/m);
-  return m ? m[1] : null;
+  try {
+    const out = g(['blame', '--porcelain', '-L', n + ',' + n, '--', file], { cwd: root });
+    const m = out.match(/^([0-9a-f]{40})/m);
+    return m ? m[1] : null;
+  } catch { return null; }
 }
 
 function commitInfo(hash, root) {
   assertSafeHash(hash);
-  const fmt = '%H%x1f%an%x1f%ai%x1f%s';
-  const out = sh(`git show --no-patch --format="${fmt}" ${hash}`, { cwd: root });
+  const out = g(['show', '--no-patch', '--format=%H%x1f%an%x1f%ai%x1f%s', hash], { cwd: root });
   const [h, author, date, msg] = out.split('\x1f');
   return { hash: h.slice(0,12), fullHash: h, author, date, message: msg };
 }
 
 function snippet(hash, file, root) {
   assertSafeHash(hash);
-  if (!isSafeFile(file)) return '';
   try {
-    const out = sh(`git show ${hash} -- "${file.replace(/"/g,'\\"')}"`, { cwd: root });
+    const out = g(['show', hash, '--', file], { cwd: root });
     return out.split('\n').slice(0,120).join('\n');
   } catch { return ''; }
 }
 
 function isWhitespaceOnly(hash, file, root) {
   assertSafeHash(hash);
-  if (!isSafeFile(file)) return false;
   try {
-    const diff = sh(`git show --ignore-all-space --ignore-blank-lines --format="" ${hash} -- "${file.replace(/"/g,'\\"')}"`, { cwd: root });
+    const diff = g(['show', '--ignore-all-space', '--ignore-blank-lines', '--format=', hash, '--', file], { cwd: root });
     const lines = diff.split('\n').filter(l => l.startsWith('+') || l.startsWith('-'));
     const content = lines.filter(l => !l.startsWith('+++') && !l.startsWith('---'));
     return content.length === 0;
   } catch { return false; }
 }
 
+function lineAt(commit, file, line, root) {
+  const out = g(['show', commit + ':' + file], { cwd: root });
+  return (out.split('\n')[line - 1] || '').trim();
+}
+
 function szzOrigin(file, line, blameHash, root) {
   assertSafeHash(blameHash);
   let content = '';
-  try { content = sh(`git show ${blameHash}:"${file.replace(/"/g,'\\"')}" | sed -n '${line}p'`, { cwd: root }); } catch {}
-  content = content.trim();
+  try { content = lineAt(blameHash, file, line, root); } catch {}
+  // pipe-less: content is passed as a safe argv element; bail on too-short lines
   if (!content || content.length < 3) return blameHash;
-  const risky = [String.fromCharCode(34), String.fromCharCode(96), String.fromCharCode(36), String.fromCharCode(59), String.fromCharCode(92), String.fromCharCode(10), '|', '&', '(', ')', '<', '>', '\n', '\0'].some(c => content.includes(c));
-  if (risky) return blameHash;
   try {
-    const hashes = sh(`git log --reverse --diff-filter=A --format="%H" --all -S "${content.replace(/"/g,'\\"')}" -- "${file.replace(/"/g,'\\"')}"`, { cwd: root });
-    const all = sh(`git log --reverse --format="%H" --all -G "${content.replace(/"/g,'\\"')}" -- "${file.replace(/"/g,'\\"')}"`, { cwd: root });
-    const list = (all || hashes).split('\n').filter(Boolean);
+    const hashes = g(['log', '--reverse', '--diff-filter=A', '--format=%H', '--all', '-S', content, '--', file], { cwd: root });
+    const all = g(['log', '--reverse', '--format=%H', '--all', '-G', content, '--', file], { cwd: root });
+    const list = (hashes || all).split('\n').filter(Boolean);
     if (list.length) {
       const first = list[0].trim();
       if (isSafeHash(first)) return first;
@@ -82,15 +76,13 @@ function szzOrigin(file, line, blameHash, root) {
 
 function worktreeAdd(hash, dest, root) {
   assertSafeHash(hash);
-  if (dest.includes('"') || dest.includes('\n') || /[`$;|&()<>]/.test(dest)) throw new Error('Invalid dest');
-  sh(`git worktree add --detach "${dest}" ${hash}`, { cwd: root });
+  g(['worktree', 'add', '--detach', dest, hash], { cwd: root });
 }
 function worktreeRemove(dest, root) {
-  if (dest.includes('"') || dest.includes('\n') || /[`$;|&()<>]/.test(dest)) throw new Error('Invalid dest');
-  sh(`git worktree remove --force "${dest}"`, { cwd: root });
+  g(['worktree', 'remove', '--force', dest], { cwd: root });
 }
 function worktreeList(root) {
-  try { return sh('git worktree list --porcelain', { cwd: root }); } catch { return ''; }
+  try { return g(['worktree', 'list', '--porcelain'], { cwd: root }); } catch { return ''; }
 }
 
-module.exports = { sh, gitRoot, isTracked, blame, commitInfo, snippet, isWhitespaceOnly, szzOrigin, worktreeAdd, worktreeRemove, worktreeList };
+module.exports = { g, gitRoot, blame, commitInfo, snippet, isWhitespaceOnly, szzOrigin, worktreeAdd, worktreeRemove, worktreeList };
