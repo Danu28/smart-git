@@ -86,14 +86,14 @@ smart-git lens --exit /tmp/smart-git-lens-...  # remove specific
 
 ## How it works
 1. **Parse** regex → `file:line` → resolve via `git ls-files`
-2. **Blame** → candidate hash → walk `git log -G` (SZZ lite) → origin hash
+2. **Blame** → candidate hash → walk `git log -S` (exact-string SZZ) with `git log -G` fallback (SZZ lite) → origin hash
 3. **Rank** — origin > last-touch; demote whitespace-only diffs (`--ignore-all-space`)
 4. **Preview** — `git worktree add --detach` at culprit
 
 ## Dev
 
 ```bash
-npm test                          # node --test (13 tests)
+npm test                          # node --test (20 tests)
 node bin/smart-git --help
 echo 'Error\n at foo (src/parser.js:5:3)' | node bin/smart-git trace --json
 ```
