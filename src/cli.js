@@ -48,17 +48,47 @@ function parseArgs(argv) {
 async function readInput(stacktracePath, raw) {
   const NL = String.fromCharCode(92) + 'n';
   const toText = s => s.split(NL).join(String.fromCharCode(10));
+  const readFile = s => { try { if (fs.existsSync(s)) return fs.readFileSync(s, 'utf8'); } catch {} return null; };
   if (raw && stacktracePath) {
-    try { if (fs.existsSync(stacktracePath)) return fs.readFileSync(stacktracePath, 'utf8'); } catch {}
-    return toText(stacktracePath + ' ' + raw);
+    const f = readFile(stacktracePath);
+    return f !== null ? f : toText(stacktracePath + ' ' + raw);
   }
   if (raw) return toText(raw);
   if (stacktracePath) {
-    try { if (fs.existsSync(stacktracePath)) return fs.readFileSync(stacktracePath, 'utf8'); } catch {}
-    return toText(stacktracePath);
+    const f = readFile(stacktracePath);
+    return f !== null ? f : toText(stacktracePath);
   }
   if (process.stdin.isTTY) return '';
-  return fs.readFileSync(0, 'utf8');
+  return readStdin();
+}
+// Read piped stdin. Resolves on 'end' (normal pipe) or on a timeout so an open
+// pipe that never closes can't hang the process. Timeout only fires when no
+// data ever arrives; a normal `cmd | smart-git trace` ends almost immediately.
+function readStdin() {
+  return new Promise((resolve) => {
+    let data = '';
+    let settled = false;
+    let timer;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      process.stdin.removeListener('data', onData);
+      process.stdin.removeListener('end', onEnd);
+      process.stdin.removeListener('error', onError);
+      process.stdin.pause();
+      if (typeof process.stdin.unref === 'function') process.stdin.unref();
+      resolve(data);
+    };
+    const onData = (d) => { data += d; };
+    const onEnd = done;
+    const onError = done;
+    process.stdin.setEncoding('utf8');
+    process.stdin.on('data', onData);
+    process.stdin.on('end', onEnd);
+    process.stdin.on('error', onError);
+    timer = setTimeout(done, 250); // ponytail: fixed 250ms cap; raises for live tails (deliberately out of scope)
+  });
 }
 async function main(argv) {
   const parsed = parseArgs(argv);
@@ -78,4 +108,4 @@ async function main(argv) {
     if (parsed.cmd === 'lens-exit') { const d = lens.exitLens(parsed.dest); console.log('Removed ' + d); process.exit(0); }
   } catch (e) { console.error('Error:', e.message); if (process.env.DEBUG) console.error(e.stack); process.exit(2); }
 }
-module.exports = { main, parseArgs, help };
+module.exports = { main, parseArgs, help, readInput };
