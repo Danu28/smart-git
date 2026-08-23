@@ -63,9 +63,14 @@ function szzOrigin(file, line, blameHash, root) {
   // pipe-less: content is passed as a safe argv element; bail on too-short lines
   if (!content || content.length < 3) return blameHash;
   try {
+    // prefer exact-string SZZ (-S); only fall back to -G when -S finds nothing
     const hashes = g(['log', '--reverse', '--diff-filter=A', '--format=%H', '--all', '-S', content, '--', file], { cwd: root });
+    if (hashes) {
+      const first = hashes.split('\n').filter(Boolean)[0].trim();
+      if (isSafeHash(first)) return first;
+    }
     const all = g(['log', '--reverse', '--format=%H', '--all', '-G', content, '--', file], { cwd: root });
-    const list = (hashes || all).split('\n').filter(Boolean);
+    const list = all.split('\n').filter(Boolean);
     if (list.length) {
       const first = list[0].trim();
       if (isSafeHash(first)) return first;

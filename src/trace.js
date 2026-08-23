@@ -26,7 +26,7 @@ function trace(stacktraceText, opts = {}) {
     if (seenHash.has(key)) { seenHash.get(key).locations.push({ ...loc, trackedFile }); continue; }
     let info;
     try { info = git.commitInfo(origin, root); } catch { info = { hash: origin.slice(0,12), fullHash: origin, author: '?', date: '?', message: '' }; }
-    const whitespace = git.isWhitespaceOnly(origin, trackedFile, root);
+    const whitespace = origin !== blameHash ? git.isWhitespaceOnly(origin, trackedFile, root) : false;
     const culprit = {
       hash: info.hash, fullHash: info.fullHash, author: info.author, date: info.date, message: info.message,
       file: trackedFile, line: loc.line, blameHash: blameHash.slice(0,12),
@@ -40,15 +40,20 @@ function trace(stacktraceText, opts = {}) {
   }
   culprits.sort((a,b) => b.score - a.score || a.hash.localeCompare(b.hash));
   const ranked = culprits.slice(0, max);
-  return { root, locations, culprits: ranked };
+  if (ranked.length === 0 && locations.length > 0) {
+    return { root, locations, culprits: [], error: 'No culprits found. Ensure files are tracked and line numbers are in range.' };
+  }
+  return { root, locations, culprits: ranked, snippet: ranked.length ? ranked[0].snippet : '' };
 }
 function formatTable(culprits, opts = {}) {
   if (!culprits.length) return 'No culprits found.';
   const oneline = !!opts.oneline;
   const NL = String.fromCharCode(10);
   if (oneline) return culprits.map(function(c){ return c.hash + ' ' + c.file + ':' + c.line + ' ' + c.message + (c.whitespaceOnly ? ' (whitespace)' : ''); }).join(NL);
-  const header = 'rank  hash          author              date                 file:line               message';
-  const sep = '-'.repeat(90);
+  const widths = [4, 12, 18, 19, 22];
+  const labels = ['rank', 'hash', 'author', 'date', 'file:line'];
+  const header = labels.map((h, i) => h.padEnd(widths[i])).join(' ');
+  const sep = '-'.repeat(header.length);
   const rows = culprits.map(function(c,i){
     const rank = String(i+1).padEnd(4);
     const hash = c.hash.padEnd(12);

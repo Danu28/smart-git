@@ -20,7 +20,7 @@ function parseArgs(argv) {
       else if (a === '--oneline') opts.oneline = true;
       else if (a === '--verbose') opts.verbose = true;
       else if (a === '--help' || a === '-h') return { cmd: 'help' };
-      else if (a.startsWith('-')) {}
+      else if (a.startsWith('-')) { console.error('Unknown flag: ' + a); process.exit(2); }
       else {
         opts.raw = opts.raw ? opts.raw + ' ' + a : a;
         while (args.length && !args[0].startsWith('-')) opts.raw += ' ' + args.shift();
@@ -42,22 +42,19 @@ function parseArgs(argv) {
     if (preview && hash) return { cmd: 'lens-preview', hash };
     return { cmd: 'help' };
   }
-  if (cmd === '--stacktrace') return { cmd: 'trace', opts: { ...opts, stacktrace: args.shift() ?? null, raw: null } };
   return { cmd: 'help' };
 }
 async function readInput(stacktracePath, raw) {
   const NL = String.fromCharCode(92) + 'n';
   const toText = s => s.split(NL).join(String.fromCharCode(10));
   const readFile = s => { try { if (fs.existsSync(s)) return fs.readFileSync(s, 'utf8'); } catch {} return null; };
-  if (raw && stacktracePath) {
+  // single input mode: explicit file wins, else raw string, else stdin
+  if (stacktracePath) {
+    if (!fs.existsSync(stacktracePath)) throw new Error('Stacktrace file not found: ' + stacktracePath);
     const f = readFile(stacktracePath);
-    return f !== null ? f : toText(stacktracePath + ' ' + raw);
+    return f !== null ? f : '';
   }
   if (raw) return toText(raw);
-  if (stacktracePath) {
-    const f = readFile(stacktracePath);
-    return f !== null ? f : toText(stacktracePath);
-  }
   if (process.stdin.isTTY) return '';
   return readStdin();
 }
@@ -68,26 +65,36 @@ function readStdin() {
   return new Promise((resolve) => {
     let data = '';
     let settled = false;
-    let timer;
-    const done = () => {
+    let idleTimer;
+    let watchTimer;
+    const settle = (val) => {
       if (settled) return;
       settled = true;
-      clearTimeout(timer);
+      clearTimeout(idleTimer);
+      clearTimeout(watchTimer);
       process.stdin.removeListener('data', onData);
       process.stdin.removeListener('end', onEnd);
       process.stdin.removeListener('error', onError);
       process.stdin.pause();
       if (typeof process.stdin.unref === 'function') process.stdin.unref();
-      resolve(data);
+      resolve(val);
     };
-    const onData = (d) => { data += d; };
-    const onEnd = done;
-    const onError = done;
+    const onData = (d) => {
+      data += d;
+      clearTimeout(watchTimer);                     // data is flowing: cancel the "no input" watchdog
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => settle(data), 100); // idle gap -> done
+    };
+    const onEnd = () => settle(data);
+    const onError = () => settle(data);
     process.stdin.setEncoding('utf8');
     process.stdin.on('data', onData);
     process.stdin.on('end', onEnd);
     process.stdin.on('error', onError);
-    timer = setTimeout(done, 250); // ponytail: fixed 250ms cap; raises for live tails (deliberately out of scope)
+    // No data within this window => treat as empty input rather than hanging on an
+    // open pipe that never closes. Data that arrives later is still captured.
+    // ponytail: live tails that stream forever are still out of scope.
+    watchTimer = setTimeout(() => { if (!data) settle(''); }, 1000);
   });
 }
 async function main(argv) {
