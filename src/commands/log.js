@@ -31,10 +31,11 @@ const log = new Command('log')
     console.log(out);
     console.log(chalk.gray('─'.repeat(50)));
 
-    // Stats
+    // Stats - JS truncation instead of head for Windows compatibility
     try {
-      const stats = runGit(`shortlog -sn --all -n | head -n 5`, { allowError: true });
-      if (stats) {
+      const rawStats = runGit(`shortlog -sn --all`, { allowError: true });
+      if (rawStats) {
+        const stats = rawStats.split('\n').slice(0, 5).join('\n');
         console.log(chalk.bold('Top contributors:'));
         console.log(chalk.gray(stats));
       }

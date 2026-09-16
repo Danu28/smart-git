@@ -33,11 +33,13 @@ const diff = new Command('diff')
     }
 
     const target = opts.staged ? '--cached' : '';
-    const patch = runGit(`diff ${target} --color=always | head -n 200`, { allowError: true });
-    if (patch && patch.trim()) {
+    const rawPatch = runGit(`diff ${target} --color=always`, { allowError: true });
+    if (rawPatch && rawPatch.trim()) {
+      const lines = rawPatch.split('\n');
+      const patch = lines.slice(0, 200).join('\n');
       console.log(chalk.gray('─'.repeat(40)));
       console.log(patch);
-      if (patch.split('\n').length >= 200) console.log(chalk.gray('... truncated, use `git diff` for full patch'));
+      if (lines.length > 200) console.log(chalk.gray('... truncated (200/ ' + lines.length + ' lines), use `git diff` for full patch'));
     }
   });
 
