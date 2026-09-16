@@ -52,8 +52,11 @@ npx github:Danu28/smart-git --help
 sg --help          # all commands
 sg status          # or sg st
 sg diff
-sg commit          # interactive conventional commit
+sg commit          # interactive conventional commit + file picker (checkbox)
 sg commit -m "feat(api): add login" --all
+sg commit -m "fix(ui): tweak header" src/header.js   # commit specific file(s) only
+sg commit src/foo.js src/bar.js                        # interactive with preselected files
+sg commit -p -m "refactor: split parser" lib/parser.js # patch-stage specific files
 sg log --limit 20 --search auth
 sg branch --create my-feature    # prompts for feat/fix prefix
 sg branch --clean                # delete merged branches
@@ -68,7 +71,7 @@ sg stash           # interactive stash manager
 
 - `sg status` — enhanced status with sync suggestions
 - `sg log` — graph log with `--search`, `--author`, `--oneline`
-- `sg commit` — conventional commits (`feat`, `fix`, `docs`...), scope, breaking change, staging
+- `sg commit` — conventional commits (`feat`, `fix`, `docs`...), scope, breaking change, staging, **selective files** (`sg commit <file...>`, checkbox file picker, `-p/--patch` partial staging via `git add -p`)
 - `sg branch` — `--create`, `--delete`, `--clean`, `--all`
 - `sg sync` — one-command sync (handles autostash, upstream, rebase)
 - `sg undo` — `--soft`/`--hard`/`--commit <hash>` with confirm
