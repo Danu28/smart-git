@@ -18,16 +18,33 @@
 | `git diff` wall of text | `sg diff` staged vs unstaged stats + summary |
 | `git stash` cryptic | `sg stash` interactive list/pop/apply/drop |
 
-## Install
+## Install — 1 command
 
+### Easiest (from GitHub — no npm publish needed)
 ```bash
-npm install -g smart-git
-# or local dev
-npm install
-npm link   # gives `smart-git` and `sg` commands
+npm install -g github:Danu28/smart-git
+# now use anywhere:
+smart-git --help
+sg --help
+sg status
 ```
 
-Requires `git` and `Node >=14`.
+### From source (contributors)
+```bash
+git clone https://github.com/Danu28/smart-git.git
+cd smart-git
+npm install
+npm link   # creates global `smart-git` + `sg` aliases
+```
+
+### Try without install (npx)
+```bash
+npx github:Danu28/smart-git --help
+```
+
+> Requires `git` and `Node >=14`. Works on Windows/macOS/Linux.
+
+[![npm version](https://img.shields.io/badge/version-1.0.0-blue)]() [![license MIT](https://img.shields.io/badge/license-MIT-green)]() [![public repo](https://img.shields.io/badge/repo-public-brightgreen)]()
 
 ## Quick start
 
@@ -76,7 +93,8 @@ Types: `feat, fix, docs, style, refactor, perf, test, chore, build, ci, revert`
 ## Development
 
 ```bash
-git clone <repo>
+git clone https://github.com/Danu28/smart-git.git
+cd smart-git
 npm install
 node bin/smart-git.js --help
 # test inside a temp repo

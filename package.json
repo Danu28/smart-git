@@ -7,12 +7,20 @@
     "smart-git": "./bin/smart-git.js",
     "sg": "./bin/smart-git.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Danu28/smart-git.git"
+  },
+  "homepage": "https://github.com/Danu28/smart-git#readme",
+  "bugs": {
+    "url": "https://github.com/Danu28/smart-git/issues"
+  },
   "scripts": {
     "test": "node --test",
     "start": "node bin/smart-git.js --help"
   },
-  "keywords": ["git", "cli", "smart-git", "developer-tools", "productivity"],
-  "author": "",
+  "keywords": ["git", "cli", "smart-git", "sg", "developer-tools", "conventional-commits", "productivity", "git-wrapper"],
+  "author": "Danu28 <dhanushkanchan28@gmail.com>",
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
