@@ -1,0 +1,26 @@
+{
+  "name": "smart-git",
+  "version": "1.0.0",
+  "description": "smart-git — a smarter, safer, more intuitive CLI wrapper that improves git with interactive workflows, conventional commits, safe sync and cleanup",
+  "main": "src/index.js",
+  "bin": {
+    "smart-git": "./bin/smart-git.js",
+    "sg": "./bin/smart-git.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node bin/smart-git.js --help"
+  },
+  "keywords": ["git", "cli", "smart-git", "developer-tools", "productivity"],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "inquirer": "^8.2.5"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

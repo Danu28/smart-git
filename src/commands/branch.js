@@ -1,0 +1,78 @@
+const { Command } = require('commander');
+const chalk = require('chalk');
+const inquirer = require('inquirer');
+const { ensureGitRepo, runGit, getCurrentBranch } = require('../utils/git');
+const { BRANCH_PREFIXES } = require('../utils/config');
+
+const branch = new Command('branch')
+  .description('Smart branch — create with convention, switch, clean (improves `git branch`/`checkout`/`switch`)')
+  .alias('br')
+  .option('-c, --create <name>', 'create branch (auto-prefix help)')
+  .option('-d, --delete <name>', 'delete branch (safe, checks merged)')
+  .option('-D, --force-delete <name>', 'force delete branch')
+  .option('--clean', 'interactive cleanup of merged branches')
+  .option('-a, --all', 'list all (including remote)')
+  .action(async (opts) => {
+    ensureGitRepo();
+
+    if (opts.create) {
+      let name = opts.create;
+      // If no prefix, prompt
+      if (!BRANCH_PREFIXES.some(p => name.startsWith(p))) {
+        const { prefix } = await inquirer.prompt([{ type: 'list', name: 'prefix', message: `Choose prefix for "${name}":`, choices: [...BRANCH_PREFIXES, 'no prefix'] }]);
+        if (prefix !== 'no prefix') name = prefix + name;
+      }
+      runGit(`checkout -b "${name}"`);
+      console.log(chalk.green(`✔ Created and switched to branch ${chalk.bold(name)}`));
+      return;
+    }
+
+    if (opts.delete) {
+      const merged = runGit('branch --merged', { allowError: true }) || '';
+      if (!merged.includes(opts.delete)) {
+        const { force } = await inquirer.prompt([{ type: 'confirm', name: 'force', message: chalk.yellow(`Branch ${opts.delete} not fully merged. Force delete?`), default: false }]);
+        if (!force) { console.log(chalk.yellow('Aborted.')); return; }
+        runGit(`branch -D "${opts.delete}"`);
+      } else {
+        runGit(`branch -d "${opts.delete}"`);
+      }
+      console.log(chalk.green(`✔ Deleted branch ${opts.delete}`));
+      return;
+    }
+
+    if (opts.forceDelete) {
+      runGit(`branch -D "${opts.forceDelete}"`);
+      console.log(chalk.green(`✔ Force-deleted ${opts.forceDelete}`));
+      return;
+    }
+
+    if (opts.clean) {
+      const mergedRaw = runGit('branch --merged', { allowError: true }) || '';
+      const current = getCurrentBranch();
+      const candidates = mergedRaw.split('\n').map(b => b.replace('*','').trim()).filter(b => b && b !== current && b !== 'main' && b !== 'master' && b !== 'develop');
+      if (!candidates.length) { console.log(chalk.green('No merged branches to clean.')); return; }
+      const { toDelete } = await inquirer.prompt([{ type: 'checkbox', name: 'toDelete', message: 'Select merged branches to delete:', choices: candidates }]);
+      for (const b of toDelete) {
+        runGit(`branch -d "${b}"`, { allowError: true });
+        console.log(chalk.gray(`  deleted ${b}`));
+      }
+      console.log(chalk.green(`✔ Cleaned ${toDelete.length} branch(es)`));
+      return;
+    }
+
+    // Default: list with smart info
+    const current = getCurrentBranch();
+    const args = opts.all ? 'branch -a' : 'branch';
+    const out = runGit(args);
+    console.log(chalk.bold.cyan('▸ smart branches'));
+    console.log(chalk.gray('─'.repeat(40)));
+    out.split('\n').forEach(line => {
+      if (line.startsWith('*')) console.log(chalk.green.bold(line) + chalk.gray(' ← current'));
+      else if (line.trim().startsWith('remotes/')) console.log(chalk.gray(line));
+      else if (line.trim()) console.log(' ' + line.trim());
+    });
+    console.log(chalk.gray('─'.repeat(40)));
+    console.log(chalk.gray(`Current: ${chalk.green(current)} | Use: ${chalk.cyan('sg branch --create <name>')} or ${chalk.cyan('sg branch --clean')}`));
+  });
+
+module.exports = branch;
