@@ -3,6 +3,17 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const { ensureGitRepo, runGit } = require('../utils/git');
 
+function getCommitCount() {
+  try {
+    const c = runGit('rev-list --count HEAD', { allowError: true });
+    return parseInt(c || '0', 10);
+  } catch { return 0; }
+}
+
+function isSingleCommit() {
+  return getCommitCount() <= 1;
+}
+
 const undo = new Command('undo')
   .description('Safe undo — revert last commit, discard changes with confirm (improves `git reset`/`revert`)')
   .option('--soft', 'soft reset (keep staged)')
@@ -27,18 +38,33 @@ const undo = new Command('undo')
     if (status) console.log(`${chalk.bold('Working tree:')} ${chalk.red('dirty')} (${status.split('\n').filter(Boolean).length} file(s) changed)`);
     else console.log(`${chalk.bold('Working tree:')} ${chalk.green('clean')}`);
 
+    const single = isSingleCommit();
+
     if (opts.hard) {
       const { ok } = await inquirer.prompt([{ type: 'confirm', name: 'ok', message: chalk.red('Hard reset will discard ALL local changes. Are you sure?'), default: false }]);
       if (!ok) { console.log(chalk.yellow('Aborted.')); return; }
-      runGit('reset --hard HEAD~1');
-      console.log(chalk.green('✔ Hard undone: last commit discarded, working tree reset'));
+      if (single) {
+        runGit('update-ref -d HEAD', { allowError: true });
+        runGit('reset --hard', { allowError: true });
+        try { runGit('clean -fd', { allowError: true }); } catch {}
+        console.log(chalk.green('✔ Hard undone: initial commit removed, working tree reset'));
+      } else {
+        runGit('reset --hard HEAD~1');
+        console.log(chalk.green('✔ Hard undone: last commit discarded, working tree reset'));
+      }
       return;
     }
 
     if (opts.soft) {
-      runGit('reset --soft HEAD~1');
-      console.log(chalk.green('✔ Soft undone: last commit undone, changes remain staged'));
-      console.log(chalk.gray('→ use `sg commit` to recommit or `sg status` to review'));
+      if (single) {
+        runGit('update-ref -d HEAD', { allowError: true });
+        console.log(chalk.green('✔ Soft undone: initial commit undone, changes remain staged'));
+        console.log(chalk.gray('→ use `sg commit` to recommit or `sg status` to review'));
+      } else {
+        runGit('reset --soft HEAD~1');
+        console.log(chalk.green('✔ Soft undone: last commit undone, changes remain staged'));
+        console.log(chalk.gray('→ use `sg commit` to recommit or `sg status` to review'));
+      }
       return;
     }
 
@@ -59,8 +85,12 @@ const undo = new Command('undo')
     if (mode === 'cancel') return;
 
     if (mode === 'revert') {
-      runGit('revert HEAD --no-edit');
-      console.log(chalk.green('✔ Reverted HEAD with new commit'));
+      try {
+        runGit('revert HEAD --no-edit');
+        console.log(chalk.green('✔ Reverted HEAD with new commit'));
+      } catch(e) {
+        console.error(chalk.red('Revert failed:'), e.message);
+      }
       return;
     }
 
@@ -69,9 +99,30 @@ const undo = new Command('undo')
       if (!ok) return;
     }
 
+    if (single) {
+      if (mode === 'soft') {
+        runGit('update-ref -d HEAD', { allowError: true });
+        console.log(chalk.green(`✔ Undone initial commit with --soft (staged)`));
+      } else if (mode === 'mixed') {
+        runGit('update-ref -d HEAD', { allowError: true });
+        runGit('reset', { allowError: true });
+        console.log(chalk.green(`✔ Undone initial commit with --mixed (unstaged)`));
+      } else {
+        runGit('update-ref -d HEAD', { allowError: true });
+        runGit('reset --hard', { allowError: true });
+        try { runGit('clean -fd', { allowError: true }); } catch {}
+        console.log(chalk.green(`✔ Undone initial commit with --hard`));
+      }
+      return;
+    }
+
     const cmd = mode === 'soft' ? 'reset --soft HEAD~1' : mode === 'mixed' ? 'reset HEAD~1' : 'reset --hard HEAD~1';
-    runGit(cmd);
-    console.log(chalk.green(`✔ Undone with --${mode}`));
+    try {
+      runGit(cmd);
+      console.log(chalk.green(`✔ Undone with --${mode}`));
+    } catch(e) {
+      console.error(chalk.red('Undo failed:'), e.message);
+    }
   });
 
 module.exports = undo;

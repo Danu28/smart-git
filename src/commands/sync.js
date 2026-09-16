@@ -46,7 +46,10 @@ const sync = new Command('sync')
       }
 
       console.log(chalk.gray('→ git fetch --prune'));
-      runGit('fetch --prune');
+      const fetched = runGit('fetch --prune', { allowError: true });
+      if (fetched === null) {
+        console.log(chalk.yellow('  (no remote or fetch failed — continuing)'));
+      }
 
       if (!hasUpstream) {
         console.log(chalk.yellow(`No upstream for ${branch}. Setting upstream...`));

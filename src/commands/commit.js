@@ -22,11 +22,39 @@ const commit = new Command('commit')
     }
 
     if (opts.message) {
-      if (opts.all) runGit('add -A');
+      if (opts.dryRun) {
+        console.log(chalk.cyan('[dry-run] Would commit with message:'));
+        console.log(chalk.white(opts.message));
+        const staged = runGit('diff --cached --stat', { allowError: true });
+        const unstaged = runGit('diff --stat', { allowError: true });
+        if (staged) console.log(chalk.gray('Staged would commit:\n' + staged));
+        if (unstaged) console.log(chalk.gray('Unstaged (would be staged):\n' + unstaged));
+        if (!staged && !unstaged) console.log(chalk.yellow('No changes to commit'));
+        return;
+      }
+      if (opts.all) {
+        runGit('add -A');
+      } else {
+        const staged = runGit('diff --cached --stat', { allowError: true });
+        if (!staged) {
+          console.log(chalk.yellow('No staged changes — staging all (use `git add` to control staging)'));
+          runGit('add -A');
+        }
+      }
       const verify = opts.verify === false ? ' --no-verify' : '';
       const amend = opts.amend ? ' --amend' : '';
-      runGit(`commit -m "${opts.message.replace(/"/g, '\\"')}"${amend}${verify}`, { silent: false });
-      console.log(chalk.green('✔ Committed with message:'), opts.message);
+      // Use temp file to avoid shell injection for special chars like " & $ `
+      const fs = require('fs');
+      const os = require('os');
+      const path = require('path');
+      const tmp = path.join(os.tmpdir(), `smart-git-msg-${Date.now()}.txt`);
+      fs.writeFileSync(tmp, opts.message);
+      try {
+        runGit(`commit -F "${tmp}"${amend}${verify}`, { silent: false });
+        console.log(chalk.green('✔ Committed with message:'), opts.message);
+      } finally {
+        try { fs.unlinkSync(tmp); } catch {}
+      }
       return;
     }
 
