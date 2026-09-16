@@ -1,0 +1,10 @@
+# .npmignore — explicit allowlist; npm uses this instead of .gitignore fallback
+# Allow bin, src, README; ignore dev artifacts
+node_modules
+npm-debug.log
+.DS_Store
+.env
+tmp/
+.git
+.github
+*.tgz

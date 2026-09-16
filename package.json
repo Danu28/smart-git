@@ -28,6 +28,12 @@
     "commander": "^11.1.0",
     "inquirer": "^8.2.5"
   },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "node": ">=14.0.0"
   }
