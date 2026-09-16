@@ -3,3 +3,13 @@ npm-debug.log
 .DS_Store
 .env
 tmp/
+# local audit/report and temp files — never push
+AUDIT_REPORT.md
+audit*.sh
+*.tmp
+*.tgz
+dry.txt
+staged.txt
+untracked.txt
+coverage/
+.nyc_output/
