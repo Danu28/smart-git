@@ -100,9 +100,15 @@ git clone https://github.com/Danu28/smart-git.git
 cd smart-git
 npm install
 node bin/smart-git.js --help
+npm test            # 19 regression tests (node --test) — no-repo guards, selective commit,
+                    # shell-injection safety, dry-run, undo-single-commit, spaces, stash, sync
 # test inside a temp repo
 mkdir /tmp/test-repo && cd /tmp/test-repo && git init && node /path/to/bin/smart-git.js status
 ```
+
+> **Shell-safety:** all git subprocesses run through `spawnSync('git', argv)` (no shell string
+> interpolation), so messages like `feat: "quotes" & $chars | ;` and filenames with spaces are
+> always passed literally — on Windows and Unix.
 
 ## Philosophy
 

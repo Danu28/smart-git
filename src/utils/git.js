@@ -1,15 +1,41 @@
-const { execSync, spawnSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const { spawnSync } = require('child_process');
 const chalk = require('chalk');
 
-function isGitRepo(cwd = process.cwd()) {
-  try {
-    execSync('git rev-parse --is-inside-work-tree', { cwd, stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
+// Tokenize a command string into an argv array WITHOUT invoking a shell.
+// Handles single/double quotes and backslash escaping, strips quotes, and
+// preserves backslashes inside double quotes (Windows temp paths like
+// C:\Users\...\Temp\file.txt stay intact). This lets runGit use
+// spawnSync('git', tokens) — eliminating every shell-injection vector
+// (`& $ "` etc.) permanently (audit B8 recommendation).
+function shellSplit(input) {
+  const tokens = [];
+  let cur = '';
+  let inS = false;
+  let inD = false;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input[i];
+    if (inS) {
+      if (ch === "'") inS = false;
+      else cur += ch;
+    } else if (inD) {
+      if (ch === '"') inD = false;
+      else if (ch === '\\' && input[i + 1] === '"') { cur += '"'; i++; }
+      else cur += ch;
+    } else {
+      if (ch === "'") inS = true;
+      else if (ch === '"') inD = true;
+      else if (ch === '\\' && i + 1 < input.length) { cur += input[i + 1]; i++; }
+      else if (/\s/.test(ch)) { if (cur) { tokens.push(cur); cur = ''; } }
+      else cur += ch;
+    }
   }
+  if (cur) tokens.push(cur);
+  return tokens;
+}
+
+function isGitRepo(cwd = process.cwd()) {
+  const result = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd, stdio: 'ignore' });
+  return result.status === 0;
 }
 
 function ensureGitRepo() {
@@ -21,22 +47,19 @@ function ensureGitRepo() {
 
 function runGit(args, options = {}) {
   const { cwd = process.cwd(), silent = false, allowError = false, raw = false } = options;
-  try {
-    const cmd = `git ${args}`;
-    const out = execSync(cmd, { cwd, encoding: 'utf8', stdio: silent ? 'pipe' : undefined });
-    if (raw) return out || '';
-    return (out || '').trim();
-  } catch (e) {
+  const argv = Array.isArray(args) ? args : shellSplit(String(args));
+  const result = spawnSync('git', argv, { cwd, encoding: 'utf8', stdio: 'pipe', maxBuffer: 20 * 1024 * 1024 });
+  if (result.error) {
     if (allowError) return null;
-    const msg = e.stderr ? e.stderr.toString() : e.message;
-    throw new Error(msg.trim());
+    throw new Error(result.error.message.trim());
   }
-}
-
-function runGitLive(args, options = {}) {
-  const { cwd = process.cwd() } = options;
-  const result = spawnSync('git', args.split(' '), { cwd, stdio: 'inherit', shell: false });
-  return result.status === 0;
+  if (result.status !== 0) {
+    if (allowError) return null;
+    const msg = (result.stderr || result.stdout || '').toString().trim();
+    throw new Error(msg || `git ${argv.join(' ')} failed (${result.status})`);
+  }
+  if (raw) return result.stdout || '';
+  return (result.stdout || '').trim();
 }
 
 function getCurrentBranch() {
@@ -151,7 +174,7 @@ module.exports = {
   isGitRepo,
   ensureGitRepo,
   runGit,
-  runGitLive,
+  shellSplit,
   getCurrentBranch,
   getUpstream,
   getStatusPorcelain,
