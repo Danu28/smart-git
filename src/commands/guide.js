@@ -28,6 +28,7 @@ const SECTIONS = [
     title: 'When things go sideways',
     lines: [
       '  sg doctor      # first move when confused: mid-rebase? conflicts? detached? gone upstream?',
+      '  sg resolve     # guided conflict resolver: preview + pick ours/theirs per file (checkpointed)',
       '  sg continue    # after resolving conflicts: resume whatever rebase/merge/cherry-pick is running',
       '  sg abort       # roll back the in-progress operation (confirm-guarded)',
       '  sg undo        # last commit: --soft/--hard/--commit <hash>; sg undo <file> = unstage/discard a file; sg undo . = restore everything; --source <ref> pulls an older revision',
