@@ -204,3 +204,65 @@ test('stash --push then --pop round-trips', () => {
   assert.match(git('status', '--porcelain').stdout, /a\.txt/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+function mkBareSync() {
+  const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-syncb-'));
+  const init = spawnSync('git', ['init', '--bare', '-q'], { cwd: bare, encoding: 'utf8' });
+  if (init.status !== 0) throw new Error('bare init failed');
+  return bare;
+}
+
+test('sync with nothing to pull does not claim it pulled', () => {
+  const { dir, git } = mkRepo();
+  const def = git('symbolic-ref', '--short', 'HEAD').stdout.trim();
+  write(dir, 'a.txt', 'x\n');
+  git('add', '-A');
+  git('commit', '-qm', 'feat: init');
+  const bare = mkBareSync();
+  git('remote', 'add', 'origin', bare);
+  git('push', '-qu', 'origin', def);
+
+  const dry = sg(dir, 'sync', '--dry-run');
+  assert.strictEqual(dry.status, 0, dry.stderr);
+  assert.match(dry.stdout, /\(nothing to pull — already up to date\)/);
+  assert.doesNotMatch(dry.stdout, /pull --rebase/);
+
+  const r = sg(dir, 'sync');
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.match(r.stdout, /nothing to pull/i);
+  assert.doesNotMatch(r.stdout, /Pulled successfully/);
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.rmSync(bare, { recursive: true, force: true });
+});
+
+test('sync still pulls when the remote actually gained commits', () => {
+  const { dir, git } = mkRepo();
+  const def = git('symbolic-ref', '--short', 'HEAD').stdout.trim();
+  write(dir, 'a.txt', 'x\n');
+  git('add', '-A');
+  git('commit', '-qm', 'feat: init');
+  const bare = mkBareSync();
+  git('remote', 'add', 'origin', bare);
+  git('push', '-qu', 'origin', def);
+
+  // a second repo pushes a new commit to the same bare behind our back —
+  // first repo's pre-fetch behind is 0; only a post-fetch re-read catches it
+  const cloneRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-sync-clone-'));
+  const work = path.join(cloneRoot, 'work');
+  const cl = spawnSync('git', ['clone', '-q', bare, work], { encoding: 'utf8' });
+  assert.strictEqual(cl.status, 0, cl.stderr);
+  const g2 = (...args) => spawnSync('git', args, { cwd: work, encoding: 'utf8' });
+  g2('config', 'user.email', 't@t');
+  g2('config', 'user.name', 't');
+  fs.writeFileSync(path.join(work, 'b.txt'), 'remote change\n');
+  g2('add', '-A');
+  g2('commit', '-qm', 'feat: remote change');
+  assert.strictEqual(g2('push').status, 0);
+
+  const r = sg(dir, 'sync');
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.match(r.stdout, /Pulled successfully/); // post-fetch gate caught behind == 1
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.rmSync(bare, { recursive: true, force: true });
+  fs.rmSync(cloneRoot, { recursive: true, force: true });
+});
