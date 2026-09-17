@@ -69,7 +69,9 @@ async function undoFiles(files, opts) {
         const { ok } = await inquirer.prompt([{ type: 'confirm', name: 'ok', message: chalk.red(`Discard ALL changes to "${file}"? (irreversible)`), default: false }]);
         if (!ok) { console.log(chalk.yellow('  skipped')); continue; }
       }
-      discardFiles([file]);
+      // includeStaged: restore index AND worktree, or the staged version silently
+      // survives and the next commit still includes it (audit pass 2 finding 2).
+      discardFiles([file], { includeStaged: true });
       console.log(chalk.green(`✔ Discarded all changes to ${file}`));
     }
   }

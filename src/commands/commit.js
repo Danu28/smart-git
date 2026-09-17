@@ -125,6 +125,16 @@ const commit = new Command('commit')
     const { files, opts } = normalizeArgs(filesArg, optsArg, cmdArg);
     ensureGitRepo();
 
+    // --amend on a repo with no commits: git commit --amend fails with
+    // "nothing to amend" — fail cleanly BEFORE any staging (audit pass 2 finding 4).
+    if (opts.amend) {
+      const count = parseInt(runGit('rev-list --count HEAD', { allowError: true }) || '0', 10);
+      if (!count) {
+        console.error(chalk.red('✖ Nothing to amend — this repo has no commits yet. Use `sg commit` without --amend.'));
+        process.exit(1);
+      }
+    }
+
     const status = runGit('status --porcelain', { allowError: true }) || '';
     if (!status.trim() && !opts.amend) {
       console.log(chalk.yellow('No changes to commit. Working tree clean.'));

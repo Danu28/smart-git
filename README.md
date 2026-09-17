@@ -44,7 +44,7 @@ npx github:Danu28/smart-git --help
 
 > Requires `git` and `Node >=14`. Works on Windows/macOS/Linux.
 
-[![npm version](https://img.shields.io/badge/version-1.0.0-blue)]() [![license MIT](https://img.shields.io/badge/license-MIT-green)]() [![public repo](https://img.shields.io/badge/repo-public-brightgreen)]()
+[![npm version](https://img.shields.io/badge/version-1.1.5-blue)]() [![license MIT](https://img.shields.io/badge/license-MIT-green)]() [![public repo](https://img.shields.io/badge/repo-public-brightgreen)]()
 
 ## Quick start
 

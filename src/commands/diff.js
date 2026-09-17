@@ -25,7 +25,10 @@ const diff = new Command('diff')
     if (refs.length) {
       const diffRefs = refs.slice(0, 2);
       const base = ['diff'];
-      if (opts.staged) base.push('--cached');
+      // git rejects --cached with two revisions; a ref-vs-ref diff never involves
+      // the index, so drop it and say so (audit pass 2 finding 5).
+      if (opts.staged && diffRefs.length < 2) base.push('--cached');
+      else if (opts.staged) console.log(chalk.gray('  (--staged ignored — comparing commits, index not involved)'));
       base.push(...diffRefs);
       const stat = runGit([...base, '--stat'].join(' '), { allowError: true }) || '(no diff)';
       console.log(chalk.bold(`Diff ${diffRefs.join(' ')}` + (opts.staged ? ' (staged)' : '') + ':'));

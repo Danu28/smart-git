@@ -1,6 +1,6 @@
 {
   "name": "smart-git",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "smart-git — a smarter, safer, more intuitive CLI wrapper that improves git with interactive workflows, conventional commits, safe sync and cleanup",
   "main": "src/index.js",
   "bin": {
@@ -19,7 +19,16 @@
     "test": "node --test",
     "start": "node bin/smart-git.js --help"
   },
-  "keywords": ["git", "cli", "smart-git", "sg", "developer-tools", "conventional-commits", "productivity", "git-wrapper"],
+  "keywords": [
+    "git",
+    "cli",
+    "smart-git",
+    "sg",
+    "developer-tools",
+    "conventional-commits",
+    "productivity",
+    "git-wrapper"
+  ],
   "author": "Danu28 <dhanushkanchan28@gmail.com>",
   "license": "MIT",
   "type": "commonjs",

@@ -169,7 +169,7 @@ function unstageFiles(files) {
   return true;
 }
 
-function discardFiles(files) {
+function discardFiles(files, options = {}) {
   if (!files || !files.length) return false;
   const changed = new Map(getChangedFiles().map(f => [f.file, f]));
   const tracked = [];
@@ -180,7 +180,12 @@ function discardFiles(files) {
     else tracked.push(file);
   }
   if (tracked.length) {
-    const r = spawnSync('git', ['restore', '--', ...tracked], { stdio: 'pipe', encoding: 'utf8' });
+    // includeStaged: also drop the index copy (true "discard ALL changes").
+    // Without it, only the worktree is restored and the staged version survives.
+    const args = options.includeStaged
+      ? ['restore', '--staged', '--worktree', '--', ...tracked]
+      : ['restore', '--', ...tracked];
+    const r = spawnSync('git', args, { stdio: 'pipe', encoding: 'utf8' });
     if (r.status !== 0) throw new Error((r.stderr || '').toString().trim());
   }
   if (untracked.length) {

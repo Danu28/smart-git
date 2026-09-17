@@ -18,8 +18,18 @@ const stash = new Command('stash')
       return;
     }
     if (opts.pop) {
-      runGit('stash pop');
-      console.log(chalk.green('✔ Popped latest stash'));
+      const list = runGit('stash list', { allowError: true }) || '';
+      if (!list.trim()) {
+        console.log(chalk.yellow('No stashes to pop.'));
+        return;
+      }
+      try {
+        runGit('stash pop');
+        console.log(chalk.green('✔ Popped latest stash'));
+      } catch (e) {
+        console.error(chalk.red('✖ stash pop failed:'), e.message);
+        console.log(chalk.yellow('  Likely conflicts — resolve them, then run `git stash drop` to finalize.'));
+      }
       return;
     }
     if (opts.clear) {

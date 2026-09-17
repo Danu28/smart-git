@@ -21,26 +21,43 @@ const branch = new Command('branch')
         const { prefix } = await inquirer.prompt([{ type: 'list', name: 'prefix', message: `Choose prefix for "${name}":`, choices: [...BRANCH_PREFIXES, 'no prefix'] }]);
         if (prefix !== 'no prefix') name = prefix + name;
       }
-      runGit(`checkout -b "${name}"`);
+      try {
+        runGit(`checkout -b "${name}"`);
+      } catch (e) {
+        // throw -> bin's parseAsync catch renders `✖ <msg>`, exit 1 (no stack)
+        throw new Error(`Could not create branch "${name}": ${e.message}`);
+      }
       console.log(chalk.green(`✔ Created and switched to branch ${chalk.bold(name)}`));
       return;
     }
 
     if (opts.delete) {
-      const merged = runGit('branch --merged', { allowError: true }) || '';
-      if (!merged.includes(opts.delete)) {
-        const { force } = await inquirer.prompt([{ type: 'confirm', name: 'force', message: chalk.yellow(`Branch ${opts.delete} not fully merged. Force delete?`), default: false }]);
-        if (!force) { console.log(chalk.yellow('Aborted.')); return; }
-        runGit(`branch -D "${opts.delete}"`);
-      } else {
-        runGit(`branch -d "${opts.delete}"`);
+      // exact-line match — substring includes() would treat "feature" as merged
+      // when only "feature-x" is (audit pass 2 finding 1).
+      const merged = (runGit('branch --merged', { allowError: true }) || '')
+        .split('\n').map(l => l.replace('*', '').trim()).filter(Boolean);
+      const isMerged = merged.includes(opts.delete);
+      try {
+        if (!isMerged) {
+          const { force } = await inquirer.prompt([{ type: 'confirm', name: 'force', message: chalk.yellow(`Branch ${opts.delete} not fully merged. Force delete?`), default: false }]);
+          if (!force) { console.log(chalk.yellow('Aborted.')); return; }
+          runGit(`branch -D "${opts.delete}"`);
+        } else {
+          runGit(`branch -d "${opts.delete}"`);
+        }
+      } catch (e) {
+        throw new Error(`Could not delete branch "${opts.delete}": ${e.message}`);
       }
       console.log(chalk.green(`✔ Deleted branch ${opts.delete}`));
       return;
     }
 
     if (opts.forceDelete) {
-      runGit(`branch -D "${opts.forceDelete}"`);
+      try {
+        runGit(`branch -D "${opts.forceDelete}"`);
+      } catch (e) {
+        throw new Error(`Could not force-delete branch "${opts.forceDelete}": ${e.message}`);
+      }
       console.log(chalk.green(`✔ Force-deleted ${opts.forceDelete}`));
       return;
     }
