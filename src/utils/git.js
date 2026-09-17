@@ -79,7 +79,9 @@ function getUpstream() {
 }
 
 function getStatusPorcelain() {
-  return runGit('status --porcelain=v1', { allowError: true }) || '';
+  // raw:true — runGit's .trim() would eat the leading space (X column) of the
+  // FIRST porcelain line (' M file' → 'M file'), miscounting staged/unstaged.
+  return runGit('status --porcelain=v1', { allowError: true, raw: true }) || '';
 }
 
 function getDiffSummary(cached = false) {

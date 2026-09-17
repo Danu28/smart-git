@@ -9,7 +9,7 @@ const status = new Command('status')
   .action((opts) => {
     ensureGitRepo();
     if (opts.porcelain) {
-      console.log(runGit('status --porcelain'));
+      console.log(runGit('status --porcelain', { raw: true }));
       return;
     }
 

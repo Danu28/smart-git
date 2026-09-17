@@ -51,6 +51,26 @@ test('clean repo: status reports clean working tree', () => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('status counts staged/unstaged/untracked right when first line is unstaged', () => {
+  // regression: runGit .trim() ate the leading space (X column) of the first
+  // porcelain line, so ' M file' became 'M file' and skewed the counts.
+  const { dir, git } = mkRepo();
+  write(dir, 'tracked.txt', 'x\n');
+  git('add', '-A');
+  git('commit', '-qm', 'feat: init');
+  write(dir, 'tracked.txt', 'y\n'); // unstaged -> first porcelain line starts with ' M'
+  write(dir, 'untracked.txt', 'new\n');
+
+  const r = sg(dir, 'status');
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.match(r.stdout, /Staged: 0/);
+  assert.match(r.stdout, /Unstaged: 1/);
+  assert.match(r.stdout, /Untracked: 1/);
+  // pretty-print keeps the X column: '??' row is untracked, ' M' row unstaged
+  assert.match(r.stdout, /\? \?\? untracked\.txt/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('commit -m with shell metacharacters is not injected', () => {
   const { dir, git } = mkRepo();
   write(dir, 'a.txt', 'hello\n');
