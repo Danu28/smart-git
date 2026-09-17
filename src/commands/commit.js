@@ -133,6 +133,18 @@ const commit = new Command('commit')
         console.error(chalk.red('✖ Nothing to amend — this repo has no commits yet. Use `sg commit` without --amend.'));
         process.exit(1);
       }
+      // Rewriting already-published history needs an explicit second look.
+      const onRemote = runGit('branch -r --contains HEAD', { allowError: true }) || '';
+      if (onRemote.trim()) {
+        const last = runGit('log -1 --oneline', { allowError: true }) || '';
+        console.log(chalk.yellow(`⚠ HEAD (${last.trim()}) is on remote branch(es): ${onRemote.trim().split('\n').map(s => s.trim()).join(', ')}`));
+        console.log(chalk.yellow('  Amending rewrites history others may have pulled.'));
+        const { ok } = await inquirer.prompt([{ type: 'confirm', name: 'ok', message: chalk.red('Amend published commit anyway?'), default: false }]);
+        if (!ok) {
+          console.log(chalk.yellow('Aborted — nothing amended.'));
+          return; // NOT process.exit: keeps the action short-circuiting in-process (tests drive parseAsync)
+        }
+      }
     }
 
     const status = runGit('status --porcelain', { allowError: true }) || '';

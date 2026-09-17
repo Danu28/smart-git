@@ -25,6 +25,9 @@ const switchCmd = require('./commands/switch');
 const rescueCmd = require('./commands/rescue');
 const doctorCmd = require('./commands/doctor');
 const cleanCmd = require('./commands/clean');
+const continueCmd = require('./commands/continue');
+const abortCmd = require('./commands/abort');
+const fixupCmd = require('./commands/fixup');
 
 program.addCommand(statusCmd);
 program.addCommand(logCmd);
@@ -39,5 +42,8 @@ program.addCommand(stashCmd);
 program.addCommand(rescueCmd);
 program.addCommand(doctorCmd);
 program.addCommand(cleanCmd);
+program.addCommand(continueCmd);
+program.addCommand(abortCmd);
+program.addCommand(fixupCmd);
 
 module.exports = { program };

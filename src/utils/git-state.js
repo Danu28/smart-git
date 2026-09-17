@@ -96,6 +96,25 @@ function hasCommits() {
   return runGit('rev-parse --verify HEAD', { allowError: true }) !== null;
 }
 
+// Exact commands for resuming / aborting each in-progress operation. Single
+// source of truth shared by `sg doctor` (hints), `sg continue` and `sg abort`.
+const OP_CMDS = {
+  continue: {
+    rebase: 'rebase --continue',
+    merge: 'merge --continue',
+    'cherry-pick': 'cherry-pick --continue',
+    revert: 'revert --continue',
+    bisect: null, // no continue — doctor falls back to `git bisect good|bad`
+  },
+  abort: {
+    rebase: 'rebase --abort',
+    merge: 'merge --abort',
+    'cherry-pick': 'cherry-pick --abort',
+    revert: 'revert --abort',
+    bisect: 'bisect reset',
+  },
+};
+
 module.exports = {
   getGitDir,
   getOperationState,
@@ -104,4 +123,5 @@ module.exports = {
   getBranchState,
   isShallowClone,
   hasCommits,
+  OP_CMDS,
 };

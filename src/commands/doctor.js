@@ -1,15 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const { ensureGitRepo, runGit, getStashList, getStatusPorcelain } = require('../utils/git');
-const { getOperationState, getUnmergedPaths, getBranchState, isShallowClone, hasCommits } = require('../utils/git-state');
-
-const CONTINUE_CMD = {
-  rebase: 'git rebase --continue',
-  merge: 'git merge --continue',
-  'cherry-pick': 'git cherry-pick --continue',
-  revert: 'git revert --continue',
-  bisect: 'git bisect good|bad',
-};
+const { getOperationState, getUnmergedPaths, getBranchState, isShallowClone, hasCommits, OP_CMDS } = require('../utils/git-state');
 
 const doctor = new Command('doctor')
   .description('Diagnose repo health — in-progress ops, conflicts, upstream, stashes (improves `git status` + guesswork)')
@@ -54,7 +46,8 @@ const doctor = new Command('doctor')
       const prog = op.step || op.total ? ` (${op.step}/${op.total})` : '';
       const conf = unmerged.length ? ` — ${unmerged.length} conflicted file(s): ${unmerged.join(', ')}` : '';
       console.log(`${chalk.bold('Operation:')} ${chalk.red('⚠ ' + op.operation.toUpperCase() + ' in progress' + prog + conf)}`);
-      console.log(chalk.gray('  → next: ') + chalk.cyan(CONTINUE_CMD[op.operation]));
+      const nextCmd = OP_CMDS.continue[op.operation] || 'bisect good|bad';
+      console.log(chalk.gray('  → next: ') + chalk.cyan(`git ${nextCmd}`));
     } else if (unmerged.length) {
       console.log(`${chalk.bold('Operation:')} ${chalk.red('⚠ unmerged path(s): ' + unmerged.join(', '))}`);
       console.log(chalk.gray('  → resolve, then ') + chalk.cyan('sg commit') + chalk.gray(' or ') + chalk.cyan('git add <file>'));

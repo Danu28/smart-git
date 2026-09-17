@@ -64,6 +64,9 @@ sg cleanup                      # delete merged branches + prune remotes
 sg sync            # smart pull --rebase + push
 sg sync --dry-run  # preview
 sg undo            # safe undo last commit
+sg continue        # after resolving conflicts: resume the in-progress rebase/merge
+sg abort           # abandon the in-progress operation (confirm-guarded)
+sg fixup <commit>  # fixup commit + autosquash into history
 sg rescue          # find ✖ LOST commits in the reflog (after reset --hard / branch -D)
 sg doctor          # diagnose repo state (mid-rebase, detached HEAD, conflicts, gone upstream)
 sg clean           # preview + safely delete untracked files (protects .env / keys)
@@ -83,6 +86,9 @@ sg stash           # interactive stash manager
 - `sg rescue` — reflog recovery: lists commits with **✖ LOST** markers (reachable-checked), `sg rescue <hash>` creates a non-destructive `rescue/<hash>` branch
 - `sg doctor` — state diagnosis: in-progress rebase/merge/cherry-pick ops with step counts, conflicted files, detached HEAD, gone upstream, stashes, shallow clone
 - `sg clean` — guarded untracked deletion: preview by default, **protected-file guard** (.env, *.pem, *.key, id_rsa, ...) that requires `--force`
+- `sg continue` — resume the in-progress rebase/merge/cherry-pick/revert; refuses while conflicts remain and lists them. `sg abort` — confirm-guarded rollback of the same
+- `sg fixup <commit>` — `git commit --fixup` then a **non-interactive** `rebase -i --autosquash` (works with no upstream/root commits); `--no-rebase`, `--yes`, `--dry-run`
+- `sg commit --amend` — now warns and asks for confirmation when the commit is already pushed
 - `sg diff` — staged/unstaged stats + summary (no wall of text), `--patch` for full diff, `--staged`, `--check`, **`sg diff <ref> [ref2]` for branch/commit comparisons**
 - `sg stash` — interactive, `--push`, `--pop`, `--clear`
 - `sg cleanup` — prune merged branches + remotes
@@ -108,7 +114,7 @@ git clone https://github.com/Danu28/smart-git.git
 cd smart-git
 npm install
 node bin/smart-git.js --help
-npm test            # 49 regression tests (node --test) — rescue/doctor/clean tier-1 suite,
+npm test            # 63 regression tests (node --test) — tier-1 safety net + tier-2 flow suite,
                     # no-repo guards, selective commit, shell-injection safety, spaces, stash, sync
 # test inside a temp repo
 mkdir /tmp/test-repo && cd /tmp/test-repo && git init && node /path/to/bin/smart-git.js status

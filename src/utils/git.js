@@ -46,9 +46,11 @@ function ensureGitRepo() {
 }
 
 function runGit(args, options = {}) {
-  const { cwd = process.cwd(), silent = false, allowError = false, raw = false } = options;
+  const { cwd = process.cwd(), silent = false, allowError = false, raw = false, env } = options;
   const argv = Array.isArray(args) ? args : shellSplit(String(args));
-  const result = spawnSync('git', argv, { cwd, encoding: 'utf8', stdio: 'pipe', maxBuffer: 20 * 1024 * 1024 });
+  const spawnOpts = { cwd, encoding: 'utf8', stdio: 'pipe', maxBuffer: 20 * 1024 * 1024 };
+  if (env) spawnOpts.env = { ...process.env, ...env }; // e.g. GIT_EDITOR=true for non-interactive continue/autosquash
+  const result = spawnSync('git', argv, spawnOpts);
   if (result.error) {
     if (allowError) return null;
     throw new Error(result.error.message.trim());
