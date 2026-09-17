@@ -64,6 +64,9 @@ sg cleanup                      # delete merged branches + prune remotes
 sg sync            # smart pull --rebase + push
 sg sync --dry-run  # preview
 sg undo            # safe undo last commit
+sg rescue          # find ✖ LOST commits in the reflog (after reset --hard / branch -D)
+sg doctor          # diagnose repo state (mid-rebase, detached HEAD, conflicts, gone upstream)
+sg clean           # preview + safely delete untracked files (protects .env / keys)
 sg cleanup --dry-run
 sg stash           # interactive stash manager
 ```
@@ -77,6 +80,9 @@ sg stash           # interactive stash manager
 - `sg switch` — jump between existing branches (`-` = previous), shows sync state
 - `sg sync` — one-command sync (handles autostash, upstream, rebase)
 - `sg undo` — `--soft`/`--hard`/`--commit <hash>` with confirm; **`sg undo <file...>` unstage or discard files (confirm-guarded)**
+- `sg rescue` — reflog recovery: lists commits with **✖ LOST** markers (reachable-checked), `sg rescue <hash>` creates a non-destructive `rescue/<hash>` branch
+- `sg doctor` — state diagnosis: in-progress rebase/merge/cherry-pick ops with step counts, conflicted files, detached HEAD, gone upstream, stashes, shallow clone
+- `sg clean` — guarded untracked deletion: preview by default, **protected-file guard** (.env, *.pem, *.key, id_rsa, ...) that requires `--force`
 - `sg diff` — staged/unstaged stats + summary (no wall of text), `--patch` for full diff, `--staged`, `--check`, **`sg diff <ref> [ref2]` for branch/commit comparisons**
 - `sg stash` — interactive, `--push`, `--pop`, `--clear`
 - `sg cleanup` — prune merged branches + remotes
@@ -102,8 +108,8 @@ git clone https://github.com/Danu28/smart-git.git
 cd smart-git
 npm install
 node bin/smart-git.js --help
-npm test            # 19 regression tests (node --test) — no-repo guards, selective commit,
-                    # shell-injection safety, dry-run, undo-single-commit, spaces, stash, sync
+npm test            # 49 regression tests (node --test) — rescue/doctor/clean tier-1 suite,
+                    # no-repo guards, selective commit, shell-injection safety, spaces, stash, sync
 # test inside a temp repo
 mkdir /tmp/test-repo && cd /tmp/test-repo && git init && node /path/to/bin/smart-git.js status
 ```

@@ -16,9 +16,6 @@ const cleanup = new Command('cleanup')
     const mergedRaw = runGit('branch --merged', { allowError: true }) || '';
     const candidates = mergedRaw.split('\n').map(b => b.replace('*','').trim()).filter(b => b && b !== current && !['main','master','develop','dev'].includes(b));
 
-    console.log(chalk.gray('→ git fetch --prune'));
-    runGit('fetch --prune', { allowError: true });
-
     const remotePrune = runGit('remote prune origin --dry-run', { allowError: true }) || '';
 
     if (!candidates.length && !remotePrune.trim()) {
@@ -51,6 +48,11 @@ const cleanup = new Command('cleanup')
     } else if (opts.yes) {
       for (const b of candidates) { try { runGit(`branch -d "${b}"`); console.log(chalk.green(`  deleted ${b}`)); } catch{} }
     }
+
+    // fetch only when actually cleaning — a dry-run must not touch the
+    // network or mutate remote-tracking refs (audit pass 2 gap).
+    console.log(chalk.gray('→ git fetch --prune'));
+    runGit('fetch --prune', { allowError: true });
 
     console.log(chalk.gray('→ git remote prune origin'));
     runGit('remote prune origin', { allowError: true });

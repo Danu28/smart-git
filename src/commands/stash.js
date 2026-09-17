@@ -12,7 +12,9 @@ const stash = new Command('stash')
   .action(async (opts) => {
     ensureGitRepo();
     if (opts.push) {
-      const msg = opts.push === true ? 'smart-git stash' : opts.push;
+      // --push requires a value, so `opts.push === true` (branch existed in
+      // audit pass 2) is dead — commander never produces it.
+      const msg = opts.push || 'smart-git stash';
       runGit(`stash push -m "${msg.replace(/"/g,'\\"')}"`);
       console.log(chalk.green(`✔ Stashed: ${msg}`));
       return;
