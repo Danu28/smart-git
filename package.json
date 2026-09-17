@@ -1,6 +1,6 @@
 {
   "name": "smart-git",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "smart-git — a smarter, safer, more intuitive CLI wrapper that improves git with interactive workflows, conventional commits, safe sync and cleanup",
   "main": "src/index.js",
   "bin": {

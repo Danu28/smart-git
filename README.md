@@ -71,6 +71,7 @@ sg untrack .env     # stop tracking but keep on disk (offers .gitignore)
 sg ignore "*.log"   # append .gitignore patterns — dedupe + tracked warnings
 sg pr               # push branch + open PR via gh (compare URL without gh)
 sg why src/foo.js:12 # who wrote that line (or whole file)
+sg guide           # full playbook + per-command help in the terminal
 sg rescue          # find ✖ LOST commits in the reflog (after reset --hard / branch -D)
 sg doctor          # diagnose repo state (mid-rebase, detached HEAD, conflicts, gone upstream)
 sg clean           # preview + safely delete untracked files (protects .env / keys)
@@ -95,6 +96,7 @@ sg stash           # interactive stash manager
 - `sg untrack <path...>` — `git rm --cached` keeping files on disk + .gitignore offer (the `.env` fix); `sg ignore [patterns...]` — append with dedupe, warns when a pattern still matches tracked files, `--from-status` checkbox picker
 - `sg pr` — push (sets upstream) + `gh pr create --fill` (`--draft`/`--web`); auto-degrades to a GitHub compare URL when gh is missing; `SMART_GIT_GH` env override for gh shims/alternate installs
 - `sg why <file>[:<line>]` — whole file → top authors + recent changes; a line → the exact commit + full `git log -L` history of that line
+- `sg guide` — in-terminal playbook: golden path → recovery → housekeeping → team → safety contract; `sg guide <command>` shows one command's description + options (works outside a repo)
 - `sg commit --amend` — now warns and asks for confirmation when the commit is already pushed
 - `sg diff` — staged/unstaged stats + summary (no wall of text), `--patch` for full diff, `--staged`, `--check`, **`sg diff <ref> [ref2]` for branch/commit comparisons**
 - `sg stash` — interactive, `--push`, `--pop`, `--clear`
@@ -114,6 +116,17 @@ Closes #123
 
 Types: `feat, fix, docs, style, refactor, perf, test, chore, build, ci, revert`
 
+## Playbook — getting the most out of sg
+
+The same guide is in the terminal: **`sg guide`** (+ `sg guide <command>` for one command).
+
+- **Daily golden path:** `sg status` → `sg diff` → `sg commit` → `sg sync`
+- **Commit power moves:** `sg commit -m "fix(ui): x"` (auto-stages if nothing staged), `sg commit src/foo.js` (only that file), `sg commit -p` (patch-stage hunks), `--amend` warns when the commit is already pushed
+- **When things go sideways:** `sg doctor` first (state + next command), `sg continue` / `sg abort` (mid-rebase/merge/cherry-pick), `sg undo` (`sg undo <file>` = unstage/discard a file), `sg rescue` (recover lost commits), `sg fixup <sha>` (fix a past commit with autosquash)
+- **Housekeeping:** `sg clean` (preview + protected-file guard), `sg untrack .env` (keep file, stop tracking), `sg ignore "*.log"` (dedupe + tracked warnings), `sg cleanup --dry-run`, `sg stash`
+- **Team:** `sg pr` (push + `gh pr create --fill`, compare URL without gh), `sg why src/foo.js:12` (blame without the wall)
+- **Safety contract:** destructive ops always confirm (`--yes`/`--force` to skip); every mutating command has `--dry-run`; nothing touches the remote except `sync`/`pr`; shell-safe argv everywhere
+
 ## Development
 
 ```bash
@@ -121,7 +134,7 @@ git clone https://github.com/Danu28/smart-git.git
 cd smart-git
 npm install
 node bin/smart-git.js --help
-npm test            # 77 regression tests (node --test) — tier-1/2/3 suites,
+npm test            # 83 regression tests (node --test) — tier-1/2/3 + guide suites,
                     # no-repo guards, selective commit, shell-injection safety, spaces, stash, sync
 # test inside a temp repo
 mkdir /tmp/test-repo && cd /tmp/test-repo && git init && node /path/to/bin/smart-git.js status

@@ -32,6 +32,7 @@ const untrackCmd = require('./commands/untrack');
 const ignoreCmd = require('./commands/ignore');
 const prCmd = require('./commands/pr');
 const whyCmd = require('./commands/why');
+const guideCmd = require('./commands/guide');
 
 program.addCommand(statusCmd);
 program.addCommand(logCmd);
@@ -53,5 +54,6 @@ program.addCommand(untrackCmd);
 program.addCommand(ignoreCmd);
 program.addCommand(prCmd);
 program.addCommand(whyCmd);
+program.addCommand(guideCmd);
 
 module.exports = { program };
