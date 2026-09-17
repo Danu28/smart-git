@@ -17,6 +17,13 @@ const diff = new Command('diff')
     const unstagedStat = runGit('diff --stat', { allowError: true }) || '(no unstaged)';
     const untracked = runGit('ls-files --others --exclude-standard', { allowError: true }) || '';
 
+    if (opts.staged && !opts.patch) {
+      // --staged (no --patch): show staged stats only, then stop — matches docs.
+      console.log(chalk.bold('Staged:'));
+      console.log(chalk.yellow(stagedStat));
+      return;
+    }
+
     console.log(chalk.bold('Staged:'));
     console.log(chalk.yellow(stagedStat));
     console.log(chalk.bold('Unstaged:'));

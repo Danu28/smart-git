@@ -92,16 +92,6 @@ function getStashList() {
   return runGit('stash list', { allowError: true }) || '';
 }
 
-function parsePorcelain(porcelain) {
-  if (!porcelain || !porcelain.trim()) return [];
-  return porcelain.split('\n').filter(Boolean).map(line => {
-    const xy = line.slice(0, 2);
-    const file = line.slice(3).trim();
-    const displayFile = file.includes(' -> ') ? file.split(' -> ').pop().trim() : file;
-    return { xy, raw: line, file: displayFile, staged: xy[0] !== ' ' && xy[0] !== '?' && xy[0] !== '!', unstaged: xy[1] !== ' ' };
-  });
-}
-
 function getChangedFiles() {
   // -z format: each NUL field is "XY <path>" (path unquoted, spaces/UTF-8 safe).
   // NOTE: raw (untrimmed) output required — .trim() would eat the leading status space of field 1.
@@ -182,7 +172,6 @@ module.exports = {
   getStashList,
   getAheadBehind,
   suggestNextSteps,
-  parsePorcelain,
   getChangedFiles,
   gitAddFiles,
   gitAddPatch,

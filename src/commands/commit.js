@@ -215,14 +215,25 @@ const commit = new Command('commit')
       console.log(chalk.gray('─'.repeat(40)));
     }
 
-    const answers = await inquirer.prompt([
+    // Minimal happy path: type + subject. Details (scope/body/BREAKING/Closes) are gated
+    // behind one confirm — 8 prompts become 4 for the common case, capability unchanged.
+    const base = await inquirer.prompt([
       { type: 'list', name: 'type', message: 'Commit type:', choices: COMMIT_TYPES, default: 'feat' },
-      { type: 'input', name: 'scope', message: 'Scope (optional, e.g. api, ui):' },
       { type: 'input', name: 'subject', message: 'Subject (short description):', validate: v => v.length >= 3 && v.length <= 72 || '3-72 chars required' },
-      { type: 'input', name: 'body', message: 'Body (optional, longer description):' },
-      { type: 'input', name: 'breaking', message: 'Breaking change (optional):' },
-      { type: 'input', name: 'issues', message: 'Closes issues (e.g. #123):' },
     ]);
+    let answers = { type: base.type, scope: '', subject: base.subject, body: '', breaking: '', issues: '' };
+    const { details } = await inquirer.prompt([
+      { type: 'confirm', name: 'details', message: 'Add details? (scope, body, BREAKING change, Closes #)', default: false },
+    ]);
+    if (details) {
+      const extra = await inquirer.prompt([
+        { type: 'input', name: 'scope', message: 'Scope (optional, e.g. api, ui):' },
+        { type: 'input', name: 'body', message: 'Body (optional, longer description):' },
+        { type: 'input', name: 'breaking', message: 'Breaking change (optional):' },
+        { type: 'input', name: 'issues', message: 'Closes issues (e.g. #123):' },
+      ]);
+      answers = { ...answers, ...extra };
+    }
 
     // File selection step — before final confirm
     let selectedFiles = [];
