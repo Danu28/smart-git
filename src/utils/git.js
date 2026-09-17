@@ -164,6 +164,81 @@ function suggestNextSteps(status) {
   return suggestions;
 }
 
+// ---------------------------------------------------------------------------
+// Pathspec resolution — lets `sg undo` take the same arguments as
+// `git restore` (".", "src/", "*.js") instead of exact file names only.
+// ---------------------------------------------------------------------------
+
+// NUL-separated path list from git — spaces/newlines/UTF-8 safe.
+function listZ(args) {
+  const r = spawnSync('git', args, { stdio: 'pipe', encoding: 'utf8' });
+  if (r.status !== 0) return [];
+  return (r.stdout || '').split('\u0000').filter(Boolean);
+}
+
+// Expand user pathspecs into the concrete CHANGED files they cover.
+// Git owns pathspec semantics (globs also match "/", a directory covers its
+// subtree); we intersect with the changed set so unmodified files are never
+// touched. An exact path argument always matches (preserves the original
+// behaviour for untracked files and renames) — a BROAD pathspec never pulls in
+// untracked files, exactly like `git restore`, which leaves them alone.
+function expandPathspecs(specs, options = {}) {
+  const list = (specs || []).filter(Boolean);
+  const changed = options.changed || getChangedFiles();
+  const changedMap = new Map(changed.map(f => [f.file, f]));
+  const matched = [];
+  const unmatched = [];
+  const seen = new Set();
+  for (const spec of list) {
+    const before = matched.length;
+    const add = (p) => {
+      const f = changedMap.get(p);
+      if (f && !seen.has(p)) { seen.add(p); matched.push(f); }
+    };
+    const exact = changedMap.get(spec);
+    if (exact) add(spec);
+    // tracked and modified in the worktree (includes worktree deletions)
+    listZ(['ls-files', '-z', '-m', '--', spec]).forEach(add);
+    // staged: index differs from HEAD — `ls-files -m` misses these entirely
+    listZ(['diff', '--name-only', '-z', '--cached', '--', spec]).forEach(add);
+    if (matched.length === before) unmatched.push(spec);
+  }
+  return { matched, unmatched };
+}
+
+// Tracked files a pathspec covers, changed or not — for `--source <ref>`, where
+// the whole point is pulling an older version into a currently clean file.
+function trackedPathspecs(specs) {
+  const list = (specs || []).filter(Boolean);
+  if (!list.length) return [];
+  return listZ(['ls-files', '-z', '--', ...list]);
+}
+
+// How many untracked files a pathspec covers (used to explain "no changes"
+// verdicts — git restore deliberately leaves untracked files alone).
+function countUntracked(spec) {
+  return listZ(['ls-files', '-z', '-o', '--exclude-standard', '--', spec]).length;
+}
+
+// Low-level `git restore` pass-through (used for --source / --patch). Mirrors
+// git's target rules: neither flag = worktree, --staged = index only,
+// --staged + --worktree = both.
+function restoreFiles(files, options = {}) {
+  const args = ['restore'];
+  if (options.patch) args.push('--patch');
+  if (options.source) args.push(`--source=${options.source}`);
+  if (options.staged) args.push('--staged');
+  if (options.worktree) args.push('--worktree');
+  if (files && files.length) args.push('--', ...files);
+  const r = spawnSync('git', args, { stdio: options.interactive ? 'inherit' : 'pipe', encoding: 'utf8' });
+  if (r.status !== 0) {
+    // interactive: git already explained itself on the inherited terminal
+    if (options.interactive) return false;
+    throw new Error((r.stderr || '').toString().trim() || `git ${args.join(' ')} failed`);
+  }
+  return true;
+}
+
 function unstageFiles(files) {
   if (!files || !files.length) return false;
   const result = spawnSync('git', ['restore', '--staged', '--', ...files], { stdio: 'pipe', encoding: 'utf8' });
@@ -214,4 +289,8 @@ module.exports = {
   gitAddPatch,
   unstageFiles,
   discardFiles,
+  expandPathspecs,
+  trackedPathspecs,
+  countUntracked,
+  restoreFiles,
 };

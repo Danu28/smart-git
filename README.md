@@ -14,6 +14,7 @@
 | `git branch` + `checkout -b` + naming chaos | `sg branch --create` enforces `feat/`/`fix/` prefixes, safe delete, cleanup |
 | `git pull`/`push` conflicts, no autostash | `sg sync` = stash → fetch --prune → pull --rebase → push, sets upstream |
 | `git reset --hard` dangerous | `sg undo` confirms, offers soft/mixed/hard/revert with preview |
+| `git restore` pathspecs cryptic | `sg undo` is a `git restore` superset — `.`, `src/`, `*.js` pathspecs, `--source`/`--patch`, with confirm |
 | Merged branches pile up | `sg cleanup` deletes merged branches + prunes remotes |
 | `git diff` wall of text | `sg diff` staged vs unstaged stats + summary |
 | `git stash` cryptic | `sg stash` interactive list/pop/apply/drop |
@@ -87,7 +88,7 @@ sg stash           # interactive stash manager
 - `sg branch` — `--create`, `--delete`, `--all`
 - `sg switch` — jump between existing branches (`-` = previous), shows sync state
 - `sg sync` — one-command sync (handles autostash, upstream, rebase)
-- `sg undo` — `--soft`/`--hard`/`--commit <hash>` with confirm; **`sg undo <file...>` unstage or discard files (confirm-guarded)**
+- `sg undo` — `--soft`/`--hard`/`--commit <hash>` with confirm; **`sg undo <file|pathspec...>` unstage or discard files (confirm-guarded)**. A `git restore` superset: `sg undo .` restores everything changed, directory/glob pathspecs work (`src/`, `*.js`), `--staged`/`--worktree` target the index/worktree, `--source <ref>` pulls files from an older revision, `--patch` picks hunks interactively. Broad pathspecs never touch untracked files (same as `git restore`); an exact path still deletes one with confirm
 - `sg rescue` — reflog recovery: lists commits with **✖ LOST** markers (reachable-checked), `sg rescue <hash>` creates a non-destructive `rescue/<hash>` branch
 - `sg doctor` — state diagnosis: in-progress rebase/merge/cherry-pick ops with step counts, conflicted files, detached HEAD, gone upstream, stashes, shallow clone
 - `sg clean` — guarded untracked deletion: preview by default, **protected-file guard** (.env, *.pem, *.key, id_rsa, ...) that requires `--force`
@@ -122,7 +123,7 @@ The same guide is in the terminal: **`sg guide`** (+ `sg guide <command>` for on
 
 - **Daily golden path:** `sg status` → `sg diff` → `sg commit` → `sg sync`
 - **Commit power moves:** `sg commit -m "fix(ui): x"` (auto-stages if nothing staged), `sg commit src/foo.js` (only that file), `sg commit -p` (patch-stage hunks), `--amend` warns when the commit is already pushed
-- **When things go sideways:** `sg doctor` first (state + next command), `sg continue` / `sg abort` (mid-rebase/merge/cherry-pick), `sg undo` (`sg undo <file>` = unstage/discard a file), `sg rescue` (recover lost commits), `sg fixup <sha>` (fix a past commit with autosquash)
+- **When things go sideways:** `sg doctor` first (state + next command), `sg continue` / `sg abort` (mid-rebase/merge/cherry-pick), `sg undo` (`sg undo <file>` = unstage/discard a file, `sg undo .` = restore all, `sg undo <file> --source <ref>` = pull an older revision), `sg rescue` (recover lost commits), `sg fixup <sha>` (fix a past commit with autosquash)
 - **Housekeeping:** `sg clean` (preview + protected-file guard), `sg untrack .env` (keep file, stop tracking), `sg ignore "*.log"` (dedupe + tracked warnings), `sg cleanup --dry-run`, `sg stash`
 - **Team:** `sg pr` (push + `gh pr create --fill`, compare URL without gh), `sg why src/foo.js:12` (blame without the wall)
 - **Safety contract:** destructive ops always confirm (`--yes`/`--force` to skip); every mutating command has `--dry-run`; nothing touches the remote except `sync`/`pr`; shell-safe argv everywhere
