@@ -27,12 +27,4 @@ function smartCommitMessage(type, scope, subject, body, breaking, issues) {
   return msg;
 }
 
-function inferTypeFromDiff(diffStat) {
-  const lower = diffStat.toLowerCase();
-  if (lower.includes('readme') || lower.includes('.md')) return 'docs';
-  if (lower.includes('test') || lower.includes('spec')) return 'test';
-  if (lower.includes('fix') || lower.includes('bug')) return 'fix';
-  return 'feat';
-}
-
-module.exports = { COMMIT_TYPES, BRANCH_PREFIXES, smartCommitMessage, inferTypeFromDiff };
+module.exports = { COMMIT_TYPES, BRANCH_PREFIXES, smartCommitMessage };

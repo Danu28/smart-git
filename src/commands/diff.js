@@ -7,6 +7,7 @@ const diff = new Command('diff')
   .option('--staged', 'show staged only')
   .option('--stat', 'show stat only')
   .option('--check', 'summary only, no patch')
+  .option('--patch', 'show full diff patch (default: stats + summary only)')
   .action((opts) => {
     ensureGitRepo();
     console.log(chalk.bold.cyan('▸ smart diff'));
@@ -25,12 +26,10 @@ const diff = new Command('diff')
       console.log(chalk.gray(untracked.split('\n').map(f=>`  ? ${f}`).join('\n')));
     }
 
-    if (opts.check) return;
+    if (opts.check || opts.stat) return;
 
-    if (opts.stat) {
-      // already shown
-      return;
-    }
+    // Default = stats + summary only (avoids the wall-of-text git diff gives you).
+    if (!opts.patch) return;
 
     const target = opts.staged ? '--cached' : '';
     const rawPatch = runGit(`diff ${target} --color=always`, { allowError: true });

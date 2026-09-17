@@ -19,7 +19,6 @@ const undo = new Command('undo')
   .option('--soft', 'soft reset (keep staged)')
   .option('--hard', 'hard reset (discard all) — requires confirm')
   .option('--commit <hash>', 'undo specific commit via revert')
-  .option('--pop', 'undo last stash pop (re-apply stash)')
   .action(async (opts) => {
     ensureGitRepo();
 

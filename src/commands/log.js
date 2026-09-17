@@ -6,7 +6,6 @@ const log = new Command('log')
   .description('Smarter git log — graph, conventional grouping, search (improves `git log`)')
   .option('-n, --limit <n>', 'number of commits', '15')
   .option('--oneline', 'oneline view')
-  .option('--graph', 'show graph', true)
   .option('--search <term>', 'search commit messages')
   .option('--author <name>', 'filter by author')
   .action((opts) => {
