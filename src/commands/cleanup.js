@@ -42,11 +42,11 @@ const cleanup = new Command('cleanup')
       if (!ok) { console.log(chalk.yellow('Skipped branch deletion')); }
       else {
         for (const b of candidates) {
-          try { runGit(`branch -d "${b}"`); console.log(chalk.green(`  deleted ${b}`)); } catch(e){ console.log(chalk.yellow(`  skip ${b}: ${e.message.slice(0,60)}`));}
+          try { runGit(['branch', '-d', b]); console.log(chalk.green(`  deleted ${b}`)); } catch(e){ console.log(chalk.yellow(`  skip ${b}: ${e.message.slice(0,60)}`));}
         }
       }
     } else if (opts.yes) {
-      for (const b of candidates) { try { runGit(`branch -d "${b}"`); console.log(chalk.green(`  deleted ${b}`)); } catch{} }
+      for (const b of candidates) { try { runGit(['branch', '-d', b]); console.log(chalk.green(`  deleted ${b}`)); } catch{} }
     }
 
     // fetch only when actually cleaning — a dry-run must not touch the

@@ -35,7 +35,7 @@ const continueCmd = new Command('continue')
     }
 
     const step = op.step && op.total ? ` (${op.step}/${op.total})` : '';
-    console.log(chalk.gray(`→ resuming ${op.operation}${step}...`));
+    if (!opts.yes) console.log(chalk.gray(`→ resuming ${op.operation}${step}...`));
     // GIT_EDITOR=true: a prepared message (merge/cherry-pick) must not open a TTY.
     runGit(OP_CMDS.continue[op.operation], { env: { GIT_EDITOR: 'true' } });
 

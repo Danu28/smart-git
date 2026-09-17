@@ -66,7 +66,8 @@ const pr = new Command('pr')
 
     if (needPush) {
       console.log(chalk.gray(`→ git push${!hasUpstream ? ' -u' : ''} origin ${branch}`));
-      runGit(`push${!hasUpstream ? ' -u' : ''} origin "${branch}"`);
+      const pushArgs = !hasUpstream ? ['push', '-u', 'origin', branch] : ['push', 'origin', branch];
+      runGit(pushArgs);
       console.log(chalk.green('✔ Pushed.'));
     }
 

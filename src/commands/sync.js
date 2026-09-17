@@ -70,7 +70,7 @@ const sync = new Command('sync')
           return;
         }
         console.log(chalk.gray(`→ git push -u origin ${branch}`));
-        runGit(`push -u origin ${branch}`);
+        runGit(['push', '-u', 'origin', branch]);
         console.log(chalk.green('✔ Sync complete (upstream set)'));
       } else if (pullBehind > 0) {
         const pullCmd = opts.rebase === false ? 'pull' : 'pull --rebase --autostash';

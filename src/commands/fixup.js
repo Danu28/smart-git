@@ -19,13 +19,13 @@ const fixup = new Command('fixup')
       process.exit(1);
     }
 
-    const sha = runGit(`rev-parse --verify ${commitish}^{commit}`, { allowError: true });
+    const sha = runGit(['rev-parse', '--verify', `${commitish}^{commit}`], { allowError: true });
     if (!sha) {
       console.error(chalk.red(`✖ Not a commit: ${commitish}`));
       process.exit(1);
     }
     const short = sha.slice(0, 7);
-    const isAncestor = runGit(`merge-base --is-ancestor ${sha} HEAD`, { allowError: true }) !== null;
+    const isAncestor = runGit(['merge-base', '--is-ancestor', sha, 'HEAD'], { allowError: true }) !== null;
     if (!isAncestor) {
       console.error(chalk.red(`✖ ${short} is not in the current branch history — fixup must target a commit on this branch (or run it from that branch).`));
       process.exit(1);
@@ -47,7 +47,7 @@ const fixup = new Command('fixup')
       return;
     }
 
-    runGit(`commit --fixup=${short}`);
+    runGit(['commit', `--fixup=${short}`]);
     console.log(chalk.green(`✔ Created fixup commit for ${short}.`));
 
     if (opts.rebase === false) {
@@ -71,8 +71,8 @@ const fixup = new Command('fixup')
     // Autosquash rebase: bare `git rebase -i --autosquash` targets the branch's
     // upstream, which may not exist locally. Rebase onto the fixup target's
     // parent explicitly (--root when the target is the initial commit).
-    const onto = (runGit(`rev-parse --verify ${sha}^`, { allowError: true }) || '').trim() || '--root';
-    runGit(`rebase -i --autosquash --autostash ${onto}`, { env: { GIT_SEQUENCE_EDITOR: 'true', GIT_EDITOR: 'true' } });
+    const onto = (runGit(['rev-parse', '--verify', `${sha}^`], { allowError: true }) || '').trim() || '--root';
+    runGit(['rebase', '-i', '--autosquash', '--autostash', onto], { env: { GIT_SEQUENCE_EDITOR: 'true', GIT_EDITOR: 'true' } });
     console.log(chalk.green(`✔ Autosquash complete — fixup folded into ${short}.`));
   });
 

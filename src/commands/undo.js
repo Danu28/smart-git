@@ -210,7 +210,7 @@ const undo = new Command('undo')
 
     if (opts.commit) {
       console.log(chalk.gray(`→ git revert ${opts.commit}`));
-      try { runGit(`revert ${opts.commit}`); console.log(chalk.green('✔ Reverted')); } catch(e){ console.error(chalk.red(e.message));}
+      try { runGit(['revert', opts.commit]); console.log(chalk.green('✔ Reverted')); } catch(e){ console.error(chalk.red(e.message));}
       return;
     }
 

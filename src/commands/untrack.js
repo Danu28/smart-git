@@ -14,7 +14,7 @@ const untrack = new Command('untrack')
 
     const valid = [];
     for (const p of paths) {
-      const tracked = runGit(`ls-files --error-unmatch -- "${p}"`, { allowError: true }) !== null;
+      const tracked = runGit(['ls-files', '--error-unmatch', '--', p], { allowError: true }) !== null;
       if (!tracked) console.log(chalk.yellow(`  ✖ "${p}" is not tracked — nothing to do`));
       else valid.push(p);
     }
@@ -23,8 +23,8 @@ const untrack = new Command('untrack')
       process.exit(1);
     }
 
-    console.log(chalk.gray(`→ git rm --cached -r -- ${valid.map(p => `"${p}"`).join(' ')}`));
-    runGit(`rm --cached -r -- ${valid.map(p => `"${p}"`).join(' ')}`);
+    console.log(chalk.gray(`→ git rm --cached -r -- ${valid.join(' ')}`));
+    runGit(['rm', '--cached', '-r', '--', ...valid]);
     console.log(chalk.green(`✔ Untracked ${valid.length} path(s) — files stay on disk`));
 
     if (opts.gitignore === false) {

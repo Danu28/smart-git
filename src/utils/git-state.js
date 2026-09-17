@@ -67,17 +67,17 @@ function getBranchState() {
   // precision upstream check: read branch.<name>.remote + .merge from config
   // instead of @{u}, so a deleted remote branch ("gone") is distinguishable
   // from "never had an upstream".
-  const remote = runGit(`config --get branch.${head}.remote`, { allowError: true });
-  const merge = runGit(`config --get branch.${head}.merge`, { allowError: true });
+  const remote = runGit(['config', '--get', `branch.${head}.remote`], { allowError: true });
+  const merge = runGit(['config', '--get', `branch.${head}.merge`], { allowError: true });
   if (!remote || !merge) return { head, detached, short, upstream: null, gone: false, ahead: 0, behind: 0 };
 
   const remoteBranch = merge.replace(/^refs\/heads\//, '');
   const upstream = `${remote}/${remoteBranch}`;
-  const gone = runGit(`show-ref --verify --quiet refs/remotes/${remote}/${remoteBranch}`, { allowError: true }) === null;
+  const gone = runGit(['show-ref', '--verify', '--quiet', `refs/remotes/${remote}/${remoteBranch}`], { allowError: true }) === null;
   let ahead = 0, behind = 0;
   if (!gone) {
     // rev-list --left-right --count A...B → "<behind> <ahead>"
-    const ab = runGit(`rev-list --left-right --count refs/remotes/${remote}/${remoteBranch}...HEAD`, { allowError: true }) || '';
+    const ab = runGit(['rev-list', '--left-right', '--count', `refs/remotes/${remote}/${remoteBranch}...HEAD`], { allowError: true }) || '';
     const [l, r] = ab.split(/\s+/).map(Number);
     behind = l || 0;
     ahead = r || 0;

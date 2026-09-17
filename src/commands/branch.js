@@ -22,7 +22,7 @@ const branch = new Command('branch')
         if (prefix !== 'no prefix') name = prefix + name;
       }
       try {
-        runGit(`checkout -b "${name}"`);
+        runGit(['checkout', '-b', name]);
       } catch (e) {
         // throw -> bin's parseAsync catch renders `✖ <msg>`, exit 1 (no stack)
         throw new Error(`Could not create branch "${name}": ${e.message}`);
@@ -41,9 +41,9 @@ const branch = new Command('branch')
         if (!isMerged) {
           const { force } = await inquirer.prompt([{ type: 'confirm', name: 'force', message: chalk.yellow(`Branch ${opts.delete} not fully merged. Force delete?`), default: false }]);
           if (!force) { console.log(chalk.yellow('Aborted.')); return; }
-          runGit(`branch -D "${opts.delete}"`);
+          runGit(['branch', '-D', opts.delete]);
         } else {
-          runGit(`branch -d "${opts.delete}"`);
+          runGit(['branch', '-d', opts.delete]);
         }
       } catch (e) {
         throw new Error(`Could not delete branch "${opts.delete}": ${e.message}`);
@@ -54,7 +54,7 @@ const branch = new Command('branch')
 
     if (opts.forceDelete) {
       try {
-        runGit(`branch -D "${opts.forceDelete}"`);
+        runGit(['branch', '-D', opts.forceDelete]);
       } catch (e) {
         throw new Error(`Could not force-delete branch "${opts.forceDelete}": ${e.message}`);
       }

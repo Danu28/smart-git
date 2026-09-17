@@ -205,15 +205,16 @@ const commit = new Command('commit')
         }
         // else use existing staged
       }
-      const verify = opts.verify === false ? ' --no-verify' : '';
-      const amend = opts.amend ? ' --amend' : '';
       const fs = require('fs');
       const os = require('os');
       const path = require('path');
       const tmp = path.join(os.tmpdir(), `smart-git-msg-${Date.now()}.txt`);
       fs.writeFileSync(tmp, opts.message);
+      const commitArgs = ['commit', '-F', tmp];
+      if (opts.amend) commitArgs.push('--amend');
+      if (opts.verify === false) commitArgs.push('--no-verify');
       try {
-        runGit(`commit -F \"${tmp}\"${amend}${verify}`, { silent: false });
+        runGit(commitArgs, { silent: false });
         console.log(chalk.green('✔ Committed with message:'), opts.message);
         if (files.length) console.log(chalk.gray(`  files: ${files.join(', ')}`));
       } finally {
@@ -293,7 +294,18 @@ const commit = new Command('commit')
       return;
     }
 
-    // Staging
+    const fullMessage = smartCommitMessage(answers.type, answers.scope.trim(), answers.subject.trim(), answers.body.trim(), answers.breaking.trim(), answers.issues.trim());
+
+    if (opts.dryRun) {
+      console.log(chalk.cyan('\n[Dry-run] Would commit with message:\n'));
+      console.log(chalk.white(fullMessage));
+      if (selectedFiles.length) console.log(chalk.gray(`\nWould commit files: ${selectedFiles.join(', ')}`));
+      else console.log(chalk.gray('\nWould commit staged files'));
+      console.log(chalk.gray('(dry-run: no files staged)'));
+      return;
+    }
+
+    // Staging (only after dry-run check — dry-run must not mutate)
     if (selectedFiles.length) {
       try {
         stageFiles(selectedFiles, opts);
@@ -315,25 +327,16 @@ const commit = new Command('commit')
       // else keep staged as is
     }
 
-    const fullMessage = smartCommitMessage(answers.type, answers.scope.trim(), answers.subject.trim(), answers.body.trim(), answers.breaking.trim(), answers.issues.trim());
-
-    if (opts.dryRun) {
-      console.log(chalk.cyan('\n[Dry-run] Would commit with message:\n'));
-      console.log(chalk.white(fullMessage));
-      if (selectedFiles.length) console.log(chalk.gray(`\nWould commit files: ${selectedFiles.join(', ')}`));
-      else console.log(chalk.gray('\nWould commit staged files'));
-      return;
-    }
-
     const fs = require('fs');
     const os = require('os');
     const path = require('path');
     const tmp = path.join(os.tmpdir(), `smart-git-${Date.now()}.txt`);
     fs.writeFileSync(tmp, fullMessage);
-    const verify = opts.verify === false ? ' --no-verify' : '';
-    const amend = opts.amend ? ' --amend' : '';
+    const commitArgs2 = ['commit', '-F', tmp];
+    if (opts.amend) commitArgs2.push('--amend');
+    if (opts.verify === false) commitArgs2.push('--no-verify');
     try {
-      runGit(`commit -F \"${tmp}\"${amend}${verify}`);
+      runGit(commitArgs2);
       console.log(chalk.green('✔ Committed:'));
       console.log(chalk.white(fullMessage.split('\n')[0]));
       if (selectedFiles.length) console.log(chalk.gray(`  files: ${selectedFiles.join(', ')}`));

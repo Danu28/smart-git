@@ -11,16 +11,13 @@ const log = new Command('log')
   .action((opts) => {
     ensureGitRepo();
     const limit = parseInt(opts.limit, 10) || 15;
-    let args = '';
-    if (opts.oneline) {
-      args = `log --oneline --color=always -n ${limit}`;
-    } else {
-      args = `log --graph --pretty=format:"%C(yellow)%h%Creset %C(cyan)%ad%Creset %C(green)%an%Creset %s %C(red)%d%Creset" --date=short --color=always -n ${limit}`;
-    }
-    if (opts.search) args += ` --grep="${opts.search}"`;
-    if (opts.author) args += ` --author="${opts.author}"`;
+    const baseArgs = opts.oneline
+      ? ['log', '--oneline', '--color=always', '-n', String(limit)]
+      : ['log', '--graph', '--pretty=format:%C(yellow)%h%Creset %C(cyan)%ad%Creset %C(green)%an%Creset %s %C(red)%d%Creset', '--date=short', '--color=always', '-n', String(limit)];
+    if (opts.search) baseArgs.push(`--grep=${opts.search}`);
+    if (opts.author) baseArgs.push(`--author=${opts.author}`);
 
-    const out = runGit(args, { allowError: true });
+    const out = runGit(baseArgs, { allowError: true });
     if (!out) {
       console.log(chalk.yellow('No commits found.'));
       return;

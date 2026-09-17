@@ -12,10 +12,8 @@ const stash = new Command('stash')
   .action(async (opts) => {
     ensureGitRepo();
     if (opts.push) {
-      // --push requires a value, so `opts.push === true` (branch existed in
-      // audit pass 2) is dead — commander never produces it.
       const msg = opts.push || 'smart-git stash';
-      runGit(`stash push -m "${msg.replace(/"/g,'\\"')}"`);
+      runGit(['stash', 'push', '-m', msg]);
       console.log(chalk.green(`✔ Stashed: ${msg}`));
       return;
     }
@@ -39,6 +37,15 @@ const stash = new Command('stash')
       if (!ok) return;
       runGit('stash clear');
       console.log(chalk.green('✔ Cleared all stashes'));
+      return;
+    }
+
+    if (opts.list) {
+      const listExplicit = runGit('stash list', { allowError: true }) || '';
+      console.log(chalk.bold.cyan('▸ smart stash'));
+      console.log(chalk.gray('─'.repeat(40)));
+      if (!listExplicit.trim()) console.log(chalk.gray('No stashes'));
+      else console.log(listExplicit);
       return;
     }
 

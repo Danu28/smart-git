@@ -30,12 +30,12 @@ const diff = new Command('diff')
       if (opts.staged && diffRefs.length < 2) base.push('--cached');
       else if (opts.staged) console.log(chalk.gray('  (--staged ignored — comparing commits, index not involved)'));
       base.push(...diffRefs);
-      const stat = runGit([...base, '--stat'].join(' '), { allowError: true }) || '(no diff)';
+      const stat = runGit([...base, '--stat'], { allowError: true }) || '(no diff)';
       console.log(chalk.bold(`Diff ${diffRefs.join(' ')}` + (opts.staged ? ' (staged)' : '') + ':'));
       console.log(chalk.yellow(stat));
       console.log(chalk.gray('─'.repeat(40)));
       if (opts.check || opts.stat || !opts.patch) return;
-      const rawPatch = runGit([...base, '--color=always'].join(' '), { allowError: true });
+      const rawPatch = runGit([...base, '--color=always'], { allowError: true });
       if (rawPatch && rawPatch.trim()) {
         const lines = rawPatch.split('\n');
         console.log(lines.slice(0, 200).join('\n'));
@@ -69,8 +69,8 @@ const diff = new Command('diff')
     // Default = stats + summary only (avoids the wall-of-text git diff gives you).
     if (!opts.patch) return;
 
-    const target = opts.staged ? '--cached' : '';
-    const rawPatch = runGit(`diff ${target} --color=always`, { allowError: true });
+    const targetArgs = opts.staged ? ['diff', '--cached', '--color=always'] : ['diff', '--color=always'];
+    const rawPatch = runGit(targetArgs, { allowError: true });
     if (rawPatch && rawPatch.trim()) {
       const lines = rawPatch.split('\n');
       const patch = lines.slice(0, 200).join('\n');

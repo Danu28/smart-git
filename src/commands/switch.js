@@ -21,7 +21,7 @@ const switc = new Command('switch')
     if (branch !== '-') {
       // only switch to branches that actually exist — guide instead of failing cryptically
       // (show-ref --verify --quiet succeeds with EMPTY output, so check for null, not falsy)
-      const exists = runGit(`show-ref --verify --quiet refs/heads/${branch}`, { allowError: true });
+      const exists = runGit(['show-ref', '--verify', '--quiet', `refs/heads/${branch}`], { allowError: true });
       if (exists === null) {
         console.error(chalk.red(`✖ Branch "${branch}" not found.`));
         console.error(chalk.gray(`  List:   ${chalk.cyan('sg branch')}`));
@@ -31,7 +31,7 @@ const switc = new Command('switch')
     }
 
     try {
-      runGit(`checkout ${branch}`);
+      runGit(['checkout', branch]);
     } catch (e) {
       console.error(chalk.red(`✖ Could not switch: ${e.message}`));
       console.log(chalk.yellow('  Local changes may block the switch — commit, stash (sg stash), or discard (sg undo <file>).'));
