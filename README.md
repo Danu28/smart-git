@@ -59,6 +59,7 @@ sg commit src/foo.js src/bar.js                        # interactive with presel
 sg commit -p -m "refactor: split parser" lib/parser.js # patch-stage specific files
 sg log --limit 20 --search auth
 sg branch --create my-feature    # prompts for feat/fix prefix
+sg switch some-branch            # jump to existing branch (sg switch - = previous)
 sg cleanup                      # delete merged branches + prune remotes
 sg sync            # smart pull --rebase + push
 sg sync --dry-run  # preview
@@ -73,9 +74,10 @@ sg stash           # interactive stash manager
 - `sg log` — graph log with `--search`, `--author`, `--oneline`
 - `sg commit` — conventional commits (`feat`, `fix`, `docs`...), scope, breaking change, staging, **selective files** (`sg commit <file...>`, checkbox file picker, `-p/--patch` partial staging via `git add -p`)
 - `sg branch` — `--create`, `--delete`, `--all`
+- `sg switch` — jump between existing branches (`-` = previous), shows sync state
 - `sg sync` — one-command sync (handles autostash, upstream, rebase)
-- `sg undo` — `--soft`/`--hard`/`--commit <hash>` with confirm
-- `sg diff` — staged/unstaged stats + summary (no wall of text), `--patch` for full diff, `--staged`, `--check`
+- `sg undo` — `--soft`/`--hard`/`--commit <hash>` with confirm; **`sg undo <file...>` unstage or discard files (confirm-guarded)**
+- `sg diff` — staged/unstaged stats + summary (no wall of text), `--patch` for full diff, `--staged`, `--check`, **`sg diff <ref> [ref2]` for branch/commit comparisons**
 - `sg stash` — interactive, `--push`, `--pop`, `--clear`
 - `sg cleanup` — prune merged branches + remotes
 

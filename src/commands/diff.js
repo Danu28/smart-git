@@ -3,15 +3,43 @@ const chalk = require('chalk');
 const { ensureGitRepo, runGit } = require('../utils/git');
 
 const diff = new Command('diff')
-  .description('Smart diff — summary + staged/unstaged split with stats (improves `git diff`)')
+  .description('Smart diff — summary + staged/unstaged split with stats, or ref-to-ref diff (improves `git diff`)')
+  .argument('[refs...]', 'diff refs — e.g. `sg diff main HEAD` or `sg diff HEAD~1` (vs working tree)')
   .option('--staged', 'show staged only')
   .option('--stat', 'show stat only')
   .option('--check', 'summary only, no patch')
   .option('--patch', 'show full diff patch (default: stats + summary only)')
-  .action((opts) => {
+  .action((...args) => {
+    let refs = [];
+    let opts = {};
+    for (const a of args) {
+      if (Array.isArray(a)) refs = a;
+      else if (a && typeof a === 'object') {
+        opts = typeof a.opts === 'function' ? a.opts() : a;
+      }
+    }
     ensureGitRepo();
     console.log(chalk.bold.cyan('▸ smart diff'));
     console.log(chalk.gray('─'.repeat(40)));
+
+    if (refs.length) {
+      const diffRefs = refs.slice(0, 2);
+      const base = ['diff'];
+      if (opts.staged) base.push('--cached');
+      base.push(...diffRefs);
+      const stat = runGit([...base, '--stat'].join(' '), { allowError: true }) || '(no diff)';
+      console.log(chalk.bold(`Diff ${diffRefs.join(' ')}` + (opts.staged ? ' (staged)' : '') + ':'));
+      console.log(chalk.yellow(stat));
+      console.log(chalk.gray('─'.repeat(40)));
+      if (opts.check || opts.stat || !opts.patch) return;
+      const rawPatch = runGit([...base, '--color=always'].join(' '), { allowError: true });
+      if (rawPatch && rawPatch.trim()) {
+        const lines = rawPatch.split('\n');
+        console.log(lines.slice(0, 200).join('\n'));
+        if (lines.length > 200) console.log(chalk.gray(`... truncated (${lines.length} lines), use \`git diff\` for full patch`));
+      }
+      return;
+    }
 
     const stagedStat = runGit('diff --cached --stat', { allowError: true }) || '(no staged)';
     const unstagedStat = runGit('diff --stat', { allowError: true }) || '(no unstaged)';

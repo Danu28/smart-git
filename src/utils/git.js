@@ -160,6 +160,34 @@ function suggestNextSteps(status) {
   return suggestions;
 }
 
+function unstageFiles(files) {
+  if (!files || !files.length) return false;
+  const result = spawnSync('git', ['restore', '--staged', '--', ...files], { stdio: 'pipe', encoding: 'utf8' });
+  if (result.status !== 0) throw new Error((result.stderr || '').toString().trim());
+  return true;
+}
+
+function discardFiles(files) {
+  if (!files || !files.length) return false;
+  const changed = new Map(getChangedFiles().map(f => [f.file, f]));
+  const tracked = [];
+  const untracked = [];
+  for (const file of files) {
+    const f = changed.get(file);
+    if (f && f.xy === '??') untracked.push(file);
+    else tracked.push(file);
+  }
+  if (tracked.length) {
+    const r = spawnSync('git', ['restore', '--', ...tracked], { stdio: 'pipe', encoding: 'utf8' });
+    if (r.status !== 0) throw new Error((r.stderr || '').toString().trim());
+  }
+  if (untracked.length) {
+    const r = spawnSync('git', ['clean', '-f', '--', ...untracked], { stdio: 'pipe', encoding: 'utf8' });
+    if (r.status !== 0) throw new Error((r.stderr || '').toString().trim());
+  }
+  return true;
+}
+
 module.exports = {
   isGitRepo,
   ensureGitRepo,
@@ -175,4 +203,6 @@ module.exports = {
   getChangedFiles,
   gitAddFiles,
   gitAddPatch,
+  unstageFiles,
+  discardFiles,
 };

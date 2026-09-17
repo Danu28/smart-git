@@ -21,11 +21,13 @@ const undoCmd = require('./commands/undo');
 const cleanupCmd = require('./commands/cleanup');
 const diffCmd = require('./commands/diff');
 const stashCmd = require('./commands/stash');
+const switchCmd = require('./commands/switch');
 
 program.addCommand(statusCmd);
 program.addCommand(logCmd);
 program.addCommand(commitCmd);
 program.addCommand(branchCmd);
+program.addCommand(switchCmd);
 program.addCommand(syncCmd);
 program.addCommand(undoCmd);
 program.addCommand(cleanupCmd);
