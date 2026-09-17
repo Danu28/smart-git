@@ -28,6 +28,10 @@ const cleanCmd = require('./commands/clean');
 const continueCmd = require('./commands/continue');
 const abortCmd = require('./commands/abort');
 const fixupCmd = require('./commands/fixup');
+const untrackCmd = require('./commands/untrack');
+const ignoreCmd = require('./commands/ignore');
+const prCmd = require('./commands/pr');
+const whyCmd = require('./commands/why');
 
 program.addCommand(statusCmd);
 program.addCommand(logCmd);
@@ -45,5 +49,9 @@ program.addCommand(cleanCmd);
 program.addCommand(continueCmd);
 program.addCommand(abortCmd);
 program.addCommand(fixupCmd);
+program.addCommand(untrackCmd);
+program.addCommand(ignoreCmd);
+program.addCommand(prCmd);
+program.addCommand(whyCmd);
 
 module.exports = { program };
