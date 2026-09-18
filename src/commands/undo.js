@@ -221,8 +221,10 @@ const undo = new Command('undo')
     console.log(chalk.bold.cyan('▸ smart undo'));
     console.log(chalk.gray('─'.repeat(40)));
     console.log(`${chalk.bold('Last commit:')} ${chalk.yellow(last)}`);
-    if (status) console.log(`${chalk.bold('Working tree:')} ${chalk.red('dirty')} (${status.split('\n').filter(Boolean).length} file(s) changed)`);
-    else console.log(`${chalk.bold('Working tree:')} ${chalk.green('clean')}`);
+    const dirtyCount = status.split('\n').filter(Boolean).length;
+    if (status) {
+      console.log(`${chalk.bold('Working tree:')} ${chalk.red('dirty')} (${dirtyCount} file(s) changed) -- restore with ${chalk.cyan('sg undo .')} or ${chalk.cyan('sg undo <file>')}`);
+    } else console.log(`${chalk.bold('Working tree:')} ${chalk.green('clean')}`);
 
     const single = isSingleCommit();
 
@@ -254,21 +256,31 @@ const undo = new Command('undo')
       return;
     }
 
-    // Interactive
-    const { mode } = await inquirer.prompt([{
-      type: 'list',
-      name: 'mode',
-      message: 'How to undo?',
-      choices: [
+    // Interactive -- include restore when dirty so bare `sg undo` can still restore to HEAD
+    const isDirty = !!status.trim();
+    const choices = [
         { name: 'soft  — undo commit, keep staged (safe)', value: 'soft' },
         { name: 'mixed — undo commit, keep unstaged (default git)', value: 'mixed' },
         { name: 'hard  — discard commit + all changes (danger)', value: 'hard' },
         { name: 'revert — create new commit that reverts last (safe for pushed)', value: 'revert' },
-        { name: 'cancel', value: 'cancel' },
-      ]
+    ];
+    if (isDirty) choices.splice(3, 0, { name: 'restore — discard working tree changes to HEAD (sg undo .)', value: 'restore' });
+    choices.push({ name: 'cancel', value: 'cancel' });
+    const { mode } = await inquirer.prompt([{
+      type: 'list',
+      name: 'mode',
+      message: 'How to undo?',
+      choices
     }]);
 
     if (mode === 'cancel') return;
+
+    if (mode === 'restore') {
+      const { ok } = await inquirer.prompt([{ type: 'confirm', name: 'ok', message: chalk.red(`Discard ${dirtyCount} file(s) in working tree to HEAD? (irreversible)`), default: false }]);
+      if (!ok) { console.log(chalk.yellow('Cancelled.')); return; }
+      await undoFiles(['.'], { yes: true });
+      return;
+    }
 
     if (mode === 'revert') {
       try {
