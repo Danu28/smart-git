@@ -31,12 +31,13 @@ function isProtected(name) {
 }
 
 const clean = new Command('clean')
-  .description('Safe clean — preview untracked files, protected-file guard, confirm before deleting (improves `git clean`)')
+  .description('Safe clean — preview untracked files, protected-file guard, confirm before deleting (improves `git clean`) [deprecated: use sg tidy --untracked]')
   .option('--dry-run', 'show what would be deleted without prompting')
   .option('--ignored', 'also include ignored files (git clean -x)')
   .option('--yes', 'skip the confirmation prompt')
   .option('--force', 'allow deleting protected files (.env, *.pem, keys, ...)')
   .action(async (opts) => {
+    console.log(chalk.yellow('⚠ sg clean is deprecated — use `sg tidy --untracked` (same flags)'));
     ensureGitRepo();
     const x = opts.ignored ? ' -x' : '';
     const previewRaw = runGit(`clean -n -d${x}`, { allowError: true, raw: true }) || '';

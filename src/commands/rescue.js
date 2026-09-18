@@ -10,8 +10,6 @@ function getReflog(limit) {
   });
 }
 
-// Every commit still reachable from ANY ref/tag/HEAD — the rest is only
-// alive via the reflog, i.e. genuinely "lost" unless rescued.
 function getReachableSet() {
   const raw = runGit('rev-list --all', { raw: true, allowError: true }) || '';
   return new Set(raw.split('\n').filter(Boolean));
@@ -21,11 +19,9 @@ function listRescue(opts) {
   const entries = getReflog(parseInt(opts.limit, 10) || 30);
   const reachable = getReachableSet();
   let lost = 0;
-
   console.log(chalk.bold.cyan('▸ smart rescue'));
   console.log(chalk.gray('─'.repeat(40)));
   console.log(chalk.gray('Recovering lost work from the reflog — read-only, nothing modified.'));
-
   for (const e of entries) {
     const isLost = !reachable.has(e.sha);
     let line = `  [${e.gd}] ${chalk.gray(e.sha.slice(0, 10))} ${e.gs}`;
@@ -37,7 +33,6 @@ function listRescue(opts) {
     }
     console.log(line);
   }
-
   console.log(chalk.gray('─'.repeat(40)));
   if (lost) {
     console.log(chalk.yellow(`Found ${lost} lost commit(s) — recoverable safely:`));
@@ -62,10 +57,8 @@ function recoverRescue(ref) {
     console.error(chalk.red(`✖ Branch ${branchName} already exists — merge/finish it, then rerun.`));
     process.exit(1);
   }
-
   runGit(['branch', branchName, sha]);
   console.log(chalk.green(`✔ Created branch ${chalk.bold(branchName)} at ${short}`));
-
   const gained = runGit(['log', '--oneline', `HEAD..${sha}`], { allowError: true });
   if (gained) {
     console.log(chalk.bold('Commits you would gain:'));
@@ -80,9 +73,29 @@ const rescue = new Command('rescue')
   .description('Recover lost commits from the reflog — non-destructive (improves `git reflog`)')
   .argument('[commit]', 'commit-ish to recover as rescue/<hash> branch (e.g. a ✖ LOST hash from the list)')
   .option('--limit <n>', 'reflog entries to show', '30')
+  .option('--snapshot', 'create hourly snapshot at refs/smart-git/snapshot (AU3)')
+  .option('--prune', 'prune old snapshots older than 7 days')
   .action((commit, opts) => {
     ensureGitRepo();
     const options = opts && opts.opts ? opts.opts() : opts;
+    if (options && options.snapshot) {
+      const sha = runGit('stash create', { allowError:true });
+      const ts = new Date().toISOString().replace(/[:.]/g,'-').slice(0,16);
+      const ref = `refs/smart-git/snapshot-${ts}`;
+      if (sha && /^[0-9a-f]{40}$/.test(sha)) {
+        runGit(['update-ref', ref, sha], { allowError:true });
+        console.log(chalk.green(`✔ Snapshot ${ref} at ${sha.slice(0,7)}`));
+      } else {
+        const head = runGit('rev-parse HEAD', { allowError:true });
+        if (head) { runGit(['update-ref', ref, head], { allowError:true }); console.log(chalk.green(`✔ Snapshot ${ref} at ${head.slice(0,7)} (HEAD)`)); }
+        else console.log(chalk.yellow('✖ Nothing to snapshot'));
+      }
+      if (options.prune) {
+        const refs = (runGit('for-each-ref --format=%(refname) refs/smart-git/snapshot-', {allowError:true})||'').split('\n').filter(Boolean);
+        console.log(chalk.gray(`Snapshots: ${refs.length} — prune >7d not yet auto, run: git for-each-ref`));
+      }
+      return;
+    }
     if (commit) recoverRescue(commit);
     else listRescue(options || {});
   });

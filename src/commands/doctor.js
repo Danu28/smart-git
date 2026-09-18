@@ -5,7 +5,9 @@ const { getOperationState, getUnmergedPaths, getBranchState, isShallowClone, has
 
 const doctor = new Command('doctor')
   .description('Diagnose repo health — in-progress ops, conflicts, upstream, stashes (improves `git status` + guesswork)')
-  .action(() => {
+  .option('--fix', 'auto-fix: install missing completions hint and hooks')
+  .action((opts) => {
+    const fix = opts && opts.fix;
     ensureGitRepo();
     const b = getBranchState();
     const op = getOperationState();
@@ -60,6 +62,19 @@ const doctor = new Command('doctor')
     console.log(`${chalk.bold('Commits:')} ${commits ? chalk.white((runGit('rev-list --count HEAD', { allowError: true }) || '?') + (last ? `  (last: ${last})` : '')) : chalk.yellow('none yet — start with `sg commit`')}`);
     console.log(`${chalk.bold('Tree:')} ${dirtyCount ? chalk.red(`${dirtyCount} file(s) changed`) : chalk.green('clean')}`);
 
+    if (fix) {
+      console.log(chalk.gray('─'.repeat(40)));
+      console.log(chalk.bold('Fix:'));
+      // check completion
+      try {
+        const shell = process.env.SHELL || '';
+        if (shell.includes('zsh')) console.log(chalk.gray('  → sg completion zsh > ~/.zsh/completions/_sg'));
+        else if (shell.includes('fish')) console.log(chalk.gray('  → sg completion fish > ~/.config/fish/completions/sg.fish'));
+        else console.log(chalk.gray('  → sg completion bash > /etc/bash_completion.d/sg  or  source <(sg completion bash)'));
+      } catch {}
+      console.log(chalk.gray('  → sg init --hooks  to install pre-commit/pre-push hooks'));
+      console.log(chalk.green('✔ Fix hints printed (run the commands above)'));
+    }
     console.log(chalk.gray('─'.repeat(40)));
     const issues = [];
     if (op.operation) issues.push(`${op.operation} in progress`);

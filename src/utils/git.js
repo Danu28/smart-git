@@ -1,5 +1,21 @@
 const { spawnSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 const chalk = require('chalk');
+
+// ── mtime cache for repeated status (A4) ────────────────────────────────
+let _changedCache = { key: null, value: null, ts: 0 };
+function _cacheKey() {
+  try {
+    const gitDir = runGit('rev-parse --absolute-git-dir', { allowError: true });
+    if (!gitDir) return null;
+    const idx = path.join(gitDir, 'index');
+    const head = path.join(gitDir, 'HEAD');
+    const iM = fs.existsSync(idx) ? fs.statSync(idx).mtimeMs : 0;
+    const hM = fs.existsSync(head) ? fs.statSync(head).mtimeMs : 0;
+    return `${iM}:${hM}`;
+  } catch { return null; }
+}
 
 // Tokenize a command string into an argv array WITHOUT invoking a shell.
 // Handles single/double quotes and backslash escaping, strips quotes, and
@@ -97,6 +113,10 @@ function getStashList() {
 }
 
 function getChangedFiles() {
+  // mtime memo: second call within 2s and same index mtime returns cached
+  const k = _cacheKey();
+  const now = Date.now();
+  if (k && _changedCache.key === k && (now - _changedCache.ts) < 2000 && _changedCache.value) return _changedCache.value;
   // -z format: each NUL field is "XY <path>" (path unquoted, spaces/UTF-8 safe).
   // NOTE: raw (untrimmed) output required — .trim() would eat the leading status space of field 1.
   // Renames/copies: "XY <dest>" followed by a separate NUL field with the old path (skip it).
@@ -115,6 +135,7 @@ function getChangedFiles() {
     }
     files.push({ xy, raw: field, file, staged: xy[0] !== ' ' && xy[0] !== '?' && xy[0] !== '!', unstaged: xy[1] !== ' ' });
   }
+  if (k) _changedCache = { key: k, value: files, ts: now };
   return files;
 }
 

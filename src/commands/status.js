@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind, getStashList, getStatusPorcelain, suggestNextSteps } = require('../utils/git');
+const { ensureGitRepo, runGit, getStashList, getStatusPorcelain, suggestNextSteps } = require('../utils/git');
+const { getBranchState } = require('../utils/git-state');
 
 const status = new Command('status')
   .description('Smarter git status — colored, ahead/behind, stash, suggestions (improves `git status`)')
@@ -13,9 +14,13 @@ const status = new Command('status')
       return;
     }
 
-    const branch = getCurrentBranch();
-    const upstream = (() => { try { return runGit('rev-parse --abbrev-ref --symbolic-full-name @{u}', { allowError: true }); } catch { return null; }})();
-    const { ahead, behind, hasUpstream } = getAheadBehind();
+    // One-shot branchState (A2) — replaces 3 serial spawns with single rev-list
+    const bState = getBranchState();
+    const branch = bState.detached ? (bState.short || 'detached') : (bState.head || 'unknown');
+    const upstream = bState.upstream;
+    const ahead = bState.ahead;
+    const behind = bState.behind;
+    const hasUpstream = !!bState.upstream && !bState.gone;
     const porcelain = getStatusPorcelain();
     const stash = getStashList();
 

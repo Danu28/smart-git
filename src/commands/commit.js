@@ -3,6 +3,7 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const { ensureGitRepo, runGit, getDiffSummary, getChangedFiles, gitAddFiles, gitAddPatch } = require('../utils/git');
 const { COMMIT_TYPES, smartCommitMessage } = require('../utils/config');
+const { inferCommitSuggestion, aiDraftFallback } = require('../utils/infer');
 
 function normalizeArgs(filesArg, optsArg, cmdArg) {
   let files = [];
@@ -121,6 +122,7 @@ const commit = new Command('commit')
   .option('--amend', 'amend last commit')
   .option('--dry-run', 'show what would be committed without committing')
   .option('--no-verify', 'bypass hooks')
+  .option('--ai', 'AI draft: infer type/scope/subject from diff (offline heuristic, no network)')
   .action(async (filesArg, optsArg, cmdArg) => {
     const { files, opts } = normalizeArgs(filesArg, optsArg, cmdArg);
     ensureGitRepo();
@@ -154,9 +156,21 @@ const commit = new Command('commit')
     }
 
     const changedFiles = getChangedFiles();
+    // --ai heuristic (AU2) — offline, no network. Generates draft then prompts for edit.
+    let aiDraft = null;
+    if (opts.ai) {
+      try {
+        const branch = require('../utils/git').getCurrentBranch();
+        aiDraft = aiDraftFallback(changedFiles, branch);
+        if (!opts.message) {
+          console.log(chalk.gray(`→ AI draft (heuristic): ${aiDraft.type}${aiDraft.scope?`(${aiDraft.scope})`:''}: ${aiDraft.subject}`));
+        }
+      } catch {}
+    }
 
     // --- non-interactive -m path with selective support ---
     if (opts.message) {
+
       if (opts.dryRun) {
         console.log(chalk.cyan('[dry-run] Would commit with message:'));
         console.log(chalk.white(opts.message));
@@ -240,9 +254,13 @@ const commit = new Command('commit')
 
     // Minimal happy path: type + subject. Details (scope/body/BREAKING/Closes) are gated
     // behind one confirm — 8 prompts become 4 for the common case, capability unchanged.
+    const inferred = (()=>{ try { const b=require('../utils/git').getCurrentBranch(); return inferCommitSuggestion(changedFiles,b); } catch { return {type:'feat',scope:'',subject:''}; } })();
+    const aiDefault = aiDraft || inferred;
+    if (aiDraft) console.log(chalk.cyan(`  AI draft: ${aiDraft.type}${aiDraft.scope?`(${aiDraft.scope})`:''}: ${aiDraft.subject} (editable)`));
+    else if (inferred.subject) console.log(chalk.gray(`  inferred: ${inferred.type}${inferred.scope?`(${inferred.scope})`:''}: ${inferred.subject}`));
     const base = await inquirer.prompt([
-      { type: 'list', name: 'type', message: 'Commit type:', choices: COMMIT_TYPES, default: 'feat' },
-      { type: 'input', name: 'subject', message: 'Subject (short description):', validate: v => v.length >= 3 && v.length <= 72 || '3-72 chars required' },
+      { type: 'list', name: 'type', message: 'Commit type:', choices: COMMIT_TYPES, default: aiDefault.type || 'feat' },
+      { type: 'input', name: 'subject', message: 'Subject (short description):', default: aiDefault.subject || '', validate: v => v.length >= 3 && v.length <= 72 || '3-72 chars required' },
     ]);
     let answers = { type: base.type, scope: '', subject: base.subject, body: '', breaking: '', issues: '' };
     const { details } = await inquirer.prompt([

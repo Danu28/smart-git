@@ -62,7 +62,7 @@ async function undoFiles(specs, opts) {
     const names = tracked.map(f => f.file);
     if (!names.length) return;
     if (opts.staged) {
-      console.log(chalk.gray(`→ ${fmtGit(['git restore', '--staged'], names)}`));
+      if (opts.verbose) console.log(chalk.gray(`→ ${fmtGit(['git restore', '--staged'], names)}`));
       unstageFiles(names);
       console.log(chalk.green(`✔ Unstaged ${show(names)} (changes kept)`));
     }
@@ -71,7 +71,7 @@ async function undoFiles(specs, opts) {
         console.log(chalk.yellow('  aborted'));
         return;
       }
-      console.log(chalk.gray(`→ ${fmtGit(['git restore', '--worktree'], names)}`));
+      if (opts.verbose) console.log(chalk.gray(`→ ${fmtGit(['git restore', '--worktree'], names)}`));
       discardFiles(names);
       console.log(chalk.green(`✔ Discarded changes to ${show(names)}`));
     }
@@ -111,7 +111,7 @@ async function undoFiles(specs, opts) {
       unstageFiles(names);
       console.log(chalk.green(`✔ Unstaged ${show(names)}`));
     } else if (await confirmGo(`Discard ALL changes to ${show(names)}? (irreversible)`, opts)) {
-      console.log(chalk.gray(`→ ${fmtGit(['git restore', '--staged', '--worktree'], names)}`));
+      if (opts.verbose) console.log(chalk.gray(`→ ${fmtGit(['git restore', '--staged', '--worktree'], names)}`));
       discardFiles(names, { includeStaged: true });
       console.log(chalk.green(`✔ Discarded all changes to ${show(names)}`));
     } else {
@@ -123,7 +123,7 @@ async function undoFiles(specs, opts) {
   if (unstagedOnly.length) {
     const names = unstagedOnly.map(f => f.file);
     if (await confirmGo(`Discard changes to ${show(names)}? (irreversible)`, opts)) {
-      console.log(chalk.gray(`→ ${fmtGit(['git restore'], names)}`));
+      if (opts.verbose) console.log(chalk.gray(`→ ${fmtGit(['git restore'], names)}`));
       discardFiles(names);
       console.log(chalk.green(`✔ Discarded changes to ${show(names)}`));
     } else {
@@ -136,7 +136,7 @@ async function undoFiles(specs, opts) {
   if (untracked.length) {
     const names = untracked.map(f => f.file);
     if (await confirmGo(`Delete untracked ${show(names)}? (irreversible)`, opts)) {
-      console.log(chalk.gray(`→ ${fmtGit(['git clean', '-f'], names)}`));
+      if (opts.verbose) console.log(chalk.gray(`→ ${fmtGit(['git clean', '-f'], names)}`));
       discardFiles(names);
       for (const n of names) console.log(chalk.green(`✔ Deleted untracked ${n}`));
     } else {
@@ -164,7 +164,7 @@ async function restoreFromSource(files, opts) {
   const cmd = ['git', 'restore', `--source=${opts.source}`];
   if (opts.staged) cmd.push('--staged');
   if (opts.worktree) cmd.push('--worktree');
-  console.log(chalk.gray(`→ ${fmtGit(cmd, tree)}`));
+  if (opts.verbose) console.log(chalk.gray(`→ ${fmtGit(cmd, tree)}`));
   restoreFiles(tree, { source: opts.source, staged: opts.staged, worktree: opts.worktree });
   console.log(chalk.green(`✔ Restored from ${opts.source}`));
 }
@@ -180,6 +180,7 @@ const undo = new Command('undo')
   .option('--worktree', 'only touch the worktree (combine with --staged for both)')
   .option('--patch', 'pick hunks interactively (git restore -p)')
   .option('--yes', 'skip discard confirmation (sg undo <file>)')
+  .option('--verbose', 'show git commands (quiet by default)')
   .action(async (...args) => {
     let files = [];
     let opts = {};

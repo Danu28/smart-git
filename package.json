@@ -1,7 +1,7 @@
 {
   "name": "smart-git",
-  "version": "1.6.1",
-  "description": "smart-git — a smarter, safer, more intuitive CLI wrapper that improves git with interactive workflows, conventional commits, safe sync and cleanup",
+  "version": "2.0.0",
+  "description": "smart-git \u00e2\u20ac\u201d a smarter, safer, more intuitive CLI wrapper that improves git with interactive workflows, conventional commits, safe sync and cleanup",
   "main": "src/index.js",
   "bin": {
     "smart-git": "./bin/smart-git.js",

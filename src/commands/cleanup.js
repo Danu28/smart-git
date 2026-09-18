@@ -4,10 +4,11 @@ const inquirer = require('inquirer');
 const { ensureGitRepo, runGit, getCurrentBranch } = require('../utils/git');
 
 const cleanup = new Command('cleanup')
-  .description('Cleanup — delete merged branches, prune remotes, gc (improves `git branch -d` + `git gc`)')
+  .description('Cleanup — delete merged branches, prune remotes, gc (improves `git branch -d` + `git gc`) [deprecated: use sg tidy --merged]')
   .option('--dry-run', 'show what would be deleted')
   .option('--yes', 'skip confirmation')
   .action(async (opts) => {
+    console.log(chalk.yellow('⚠ sg cleanup is deprecated — use `sg tidy --merged`'));
     ensureGitRepo();
     console.log(chalk.bold.cyan('▸ smart cleanup'));
     console.log(chalk.gray('─'.repeat(40)));

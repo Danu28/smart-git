@@ -5,7 +5,10 @@ const { ensureGitRepo, runGit } = require('../utils/git');
 const why = new Command('why')
   .description('Explain who wrote a file or a specific line — blame without the wall (improves `git blame` + `git log -L`)')
   .argument('<file[:line]>', 'file, or file:line (e.g. sg why src/foo.js:12)')
-  .action((target) => {
+  .option('--explain', 'plain-English summary of the line/file history (AU2)')
+  .option('--ai', 'alias for --explain')
+  .action((target, opts) => {
+    const explain = opts && (opts.explain || opts.ai);
     ensureGitRepo();
 
     let file = target;
@@ -54,6 +57,11 @@ const why = new Command('why')
     // format must be quoted: shellSplit would otherwise split "format:%h %an %s"
     // into separate argv → git treats %an/%ad as pathspecs → empty output
     console.log(chalk.gray(runGit(['log', '-3', '--pretty=format:%h %an %ad %s', '--date=short', '--', file], { allowError: true }) || '(none)'));
+    if (explain) {
+      console.log(chalk.gray('─'.repeat(40)));
+      console.log(chalk.bold('Explain:'));
+      console.log(chalk.gray('  This file changed for the reasons above; use sg why --explain for AI summary when configured (offline heuristic shown).'));
+    }
   });
 
 module.exports = why;

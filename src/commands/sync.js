@@ -9,7 +9,28 @@ const sync = new Command('sync')
   .option('--no-push', 'do not push after pull')
   .option('--force', 'force push with lease')
   .option('--dry-run', 'show steps without executing')
+  .option('--watch [seconds]', 'poll remotes every N seconds (default 300) and notify behind/ahead — never auto-rebases')
+  .option('--auto', 'with --watch, auto-rebase when behind (opt-in)')
+  .option('--verbose', 'show git commands')
   .action(async (opts) => {
+    // --watch polling (AU3)
+    if (opts.watch !== undefined) {
+      ensureGitRepo();
+      const secs = parseInt(opts.watch === true ? '300' : String(opts.watch), 10) || 300;
+      console.log(chalk.bold.cyan(`▸ sync watch — every ${secs}s (ctrl+C to stop)`));
+      const poll = async () => {
+        try { runGit('fetch --dry-run', { allowError:true }); } catch {}
+        const { ahead, behind, hasUpstream } = getAheadBehind();
+        if (!hasUpstream) console.log(chalk.yellow('No upstream'));
+        else if (behind>0) { console.log(chalk.magenta(`↓ ${behind} behind — run sg sync${opts.auto? ' (auto)':''}`)); if(opts.auto){ try{ runGit('pull --rebase --autostash'); console.log(chalk.green('✔ auto-pulled')); }catch(e){ console.log(chalk.red('auto-pull failed')); } } }
+        else if (ahead>0) console.log(chalk.yellow(`↑ ${ahead} ahead — sg sync to push`));
+        else console.log(chalk.green(`✔ up to date — ${new Date().toLocaleTimeString()}`));
+      };
+      await poll();
+      const id = setInterval(poll, secs*1000);
+      await new Promise(()=>{}); // keep alive
+      clearInterval(id); return;
+    }
     ensureGitRepo();
     const branch = getCurrentBranch();
     const { ahead, behind, hasUpstream } = getAheadBehind();
