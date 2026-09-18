@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const { loadAllConfig, setConfig, initConfig, globalConfigPath, repoConfigPath } = require('../utils/config');
+const { UserError } = require('../utils/errors');
 
 const config = new Command('config')
   .description('Manage smart-git config — global + repo (.smartgitrc) (S3)')
@@ -35,7 +36,7 @@ const config = new Command('config')
     }
     if (opts.set) {
       const eq = opts.set.indexOf('=');
-      if (eq === -1) { console.error(chalk.red('✖ --set needs key=value')); process.exit(1); }
+      if (eq === -1) { throw new UserError('--set needs key=value'); }
       const k = opts.set.slice(0,eq);
       const v = opts.set.slice(eq+1);
       // try JSON parse, fallback string

@@ -36,10 +36,16 @@ function appendPatterns(patterns, cwd = process.cwd()) {
 
 // Tracked paths an ignore pattern would hit (exact path or dir/ prefix).
 // Lets `sg ignore` warn that the pattern needs `sg untrack` first.
+// Enhanced: simple glob support for patterns like *.log
 function findTrackedMatches(pattern, cwd = process.cwd()) {
   const out = runGit('ls-files -z', { cwd, raw: true, allowError: true }) || '';
   const files = out.split('\u0000').filter(Boolean);
   const base = String(pattern).replace(/^\/+/, '');
+  if (base.includes('*')) {
+    const esc = base.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+    const re = new RegExp('^' + esc + '$');
+    return files.filter((f) => re.test(f) || re.test(f.split('/').pop()));
+  }
   const dirPrefix = /\/$/.test(base) ? base : base + '/';
   return files.filter((f) => f === base || f.startsWith(dirPrefix));
 }

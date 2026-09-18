@@ -2,19 +2,15 @@ const { Command } = require('commander');
 const chalk = require('chalk');
 const { spawnSync } = require('node:child_process');
 const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind } = require('../utils/git');
+const { UserError } = require('../utils/errors');
 
 function ghBin() {
-  // SMART_GIT_GH: escape hatch for gh shims / alternate installs not on PATH
-  return process.env.SMART_GIT_GH || 'gh';
+  const raw = process.env.SMART_GIT_GH || 'gh';
+  return raw.replace(/^"(.*)"$/, '$1');
 }
 
-// Node >=20.12 rejects spawning .cmd/.bat without `shell: true` (CVE-2024-27980,
-// used by gh shims/installs). The command line is built ONLY from our own
-// constant args (+ opt. draft/web booleans) — no user input reaches gh — so
-// shell invocation here is contained and documented.
-function ghCommand(args) {
-  const bin = ghBin();
-  return (bin.includes(' ') ? `"${bin}"` : bin) + ' ' + args.join(' ');
+function isGhCmdShim(bin) {
+  return /\.cmd$/i.test(bin) || /\.bat$/i.test(bin);
 }
 
 function printDegrade(branch) {
@@ -32,6 +28,12 @@ function printDegrade(branch) {
   console.log('  Install gh to get PRs from the CLI: ' + chalk.cyan('https://cli.github.com') + '.');
 }
 
+function spawnGh(args, opts = {}) {
+  const bin = ghBin();
+  const needsShell = isGhCmdShim(bin);
+  return spawnSync(bin, args, { ...opts, shell: needsShell });
+}
+
 const pr = new Command('pr')
   .description('Push the current branch and open a pull request via gh; degrades to a compare URL without gh (improves `git push` + `gh pr create`)')
   .option('--draft', 'open as a draft PR')
@@ -41,19 +43,16 @@ const pr = new Command('pr')
     ensureGitRepo();
     const branch = getCurrentBranch();
     if (!branch || branch === 'unknown' || branch === 'HEAD') {
-      console.error(chalk.red('✖ Detached HEAD — checkout or create a branch first: ') + chalk.cyan('sg branch --create <name>'));
-      process.exit(1);
+      throw new UserError('Detached HEAD — checkout or create a branch first: sg branch --create <name>');
     }
     const remotes = (runGit('remote', { allowError: true }) || '').trim();
     if (!remotes) {
-      console.error(chalk.red('✖ No git remotes configured — cannot open a PR. Add one:'));
-      console.error('  ' + chalk.cyan('git remote add origin <url>'));
-      process.exit(1);
+      throw new UserError('No git remotes configured — cannot open a PR. Add one: git remote add origin <url>');
     }
 
     const { ahead, hasUpstream } = getAheadBehind();
     const needPush = !hasUpstream || ahead > 0;
-    const ghOk = spawnSync(ghCommand(['--version']), { stdio: 'ignore', shell: true }).status === 0;
+    const ghOk = spawnGh(['--version'], { stdio: 'ignore' }).status === 0;
 
     if (opts.dryRun) {
       console.log(chalk.bold.cyan(`▸ smart pr — branch ${chalk.green(branch)}`));
@@ -80,10 +79,9 @@ const pr = new Command('pr')
     const args = ['pr', 'create', '--fill'];
     if (opts.draft) args.push('--draft');
     if (opts.web) args.push('--web');
-    const res = spawnSync(ghCommand(args), { stdio: 'inherit', shell: true, env: process.env });
+    const res = spawnGh(args, { stdio: 'inherit', env: process.env });
     if (res.status !== 0) {
-      console.error(chalk.red('✖ gh pr create failed.'));
-      process.exit(1);
+      throw new UserError('gh pr create failed.');
     }
   });
 

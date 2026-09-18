@@ -77,7 +77,11 @@ if (!process.argv.slice(2).length) {
 
 // parseAsync + catch: async command errors surface as a clean `✖ <message>`
 // instead of an unhandled-rejection stack trace (audit pass 2 findings 1/3/4).
+// UserError is the expected user-facing failure — no stack, exit 1.
 program.parseAsync(process.argv).catch((err) => {
-  console.error(chalk.red(`✖ ${(err && err.message) || err}`));
+  const msg = (err && err.message) || String(err);
+  // UserError already has clean message; suppress stack for all expected errors
+  console.error(chalk.red(`✖ ${msg}`));
+  if (process.env.SMART_GIT_DEBUG) console.error(err.stack);
   process.exit(1);
 });

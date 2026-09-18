@@ -3,6 +3,7 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const { ensureGitRepo, runGit } = require('../utils/git');
 const { getOperationState, OP_CMDS } = require('../utils/git-state');
+const { UserError } = require('../utils/errors');
 
 const abort = new Command('abort')
   .description('Abort the in-progress rebase/merge/cherry-pick/revert/bisect back to the pre-operation state (improves `git rebase --abort` etc.)')
@@ -38,8 +39,7 @@ const abort = new Command('abort')
 
     runGit(cmd, { env: { GIT_EDITOR: 'true' } });
     if (getOperationState().operation) {
-      console.error(chalk.red(`✖ Could not abort ${op.operation} — check the state with ${chalk.cyan('sg doctor')}.`));
-      process.exit(1);
+      throw new UserError(`Could not abort ${op.operation} — check the state with sg doctor.`);
     }
     console.log(chalk.green(`✔ ${op.operation} aborted — back to pre-operation state.`));
   });

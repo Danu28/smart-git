@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const { ensureGitRepo, runGit } = require('../utils/git');
 const { getOperationState, getUnmergedPaths } = require('../utils/git-state');
+const { UserError } = require('../utils/errors');
 
 function getConflictPreview(file) {
   // Try combined diff first, fallback to showing markers snippet
@@ -62,8 +63,7 @@ const resolve = new Command('resolve')
     const useOurs = !!options.ours;
     const useTheirs = !!options.theirs;
     if (useOurs && useTheirs) {
-      console.error(chalk.red('✖ Use either --ours or --theirs, not both.'));
-      process.exit(1);
+      throw new UserError('Use either --ours or --theirs, not both.');
     }
 
     let unmerged = getUnmergedPaths();

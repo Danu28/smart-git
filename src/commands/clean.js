@@ -2,33 +2,8 @@ const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
 const { ensureGitRepo, runGit } = require('../utils/git');
-
-// Basenames that are almost certainly secrets or config. `git clean -fd`
-// has NO undo, so these need an explicit --force even with --yes.
-const PROTECTED = [
-  /^\.env$/,
-  /^\.env\.[\w.-]+$/,
-  /^\.npmrc$/,
-  /^\.netrc$/,
-  /^\.gitconfig$/,
-  /\.pem$/i,
-  /\.key$/i,
-  /\.crt$/i,
-  /\.p12$/i,
-  /\.pfx$/i,
-  /^id_rsa/,
-  /credentials/i,
-  /secret/i,
-];
-
-function basename(p) {
-  return p.replace(/\\/g, '/').split('/').pop();
-}
-
-function isProtected(name) {
-  const base = basename(name);
-  return PROTECTED.some((re) => re.test(base));
-}
+const { UserError } = require('../utils/errors');
+const { isProtected } = require('../utils/constants');
 
 const clean = new Command('clean')
   .description('Safe clean — preview untracked files, protected-file guard, confirm before deleting (improves `git clean`) [deprecated: use sg tidy --untracked]')
@@ -74,9 +49,7 @@ const clean = new Command('clean')
 
     if (protectedFiles.length && !opts.force) {
       console.log(chalk.gray('─'.repeat(40)));
-      console.error(chalk.red(`✖ Aborting: ${protectedFiles.length} protected file(s) may contain secrets.`));
-      console.error(chalk.yellow('  Re-run with --force after verifying.'));
-      process.exit(1);
+      throw new UserError(`Aborting: ${protectedFiles.length} protected file(s) may contain secrets. Re-run with --force after verifying.`);
     }
     if (opts.force && protectedFiles.length) {
       console.log(chalk.yellow(`  --force: deleting ${protectedFiles.length} protected file(s) as requested`));

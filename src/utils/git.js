@@ -5,6 +5,7 @@ const chalk = require('chalk');
 
 // ── mtime cache for repeated status (A4) ────────────────────────────────
 let _changedCache = { key: null, value: null, ts: 0 };
+function invalidateChangedCache() { _changedCache = { key: null, value: null, ts: 0 }; }
 function _cacheKey() {
   try {
     const gitDir = runGit('rev-parse --absolute-git-dir', { allowError: true });
@@ -56,8 +57,8 @@ function isGitRepo(cwd = process.cwd()) {
 
 function ensureGitRepo() {
   if (!isGitRepo()) {
-    console.error(chalk.red('✖ Not a git repository. Run `git init` first or cd into a repo.'));
-    process.exit(1);
+    const { UserError } = require('./errors');
+    throw new UserError('Not a git repository. Run `git init` first or cd into a repo.');
   }
 }
 
@@ -158,15 +159,26 @@ function gitAddPatch(files, options = {}) {
 }
 
 function getAheadBehind() {
+  // Canonical source is git-state#getBranchState (config-based, distinguishes gone).
+  // Delegates lazily to avoid circular require at load time.
   try {
-    const upstream = getUpstream();
-    if (!upstream) return { ahead: 0, behind: 0, hasUpstream: false };
-    const out = runGit(`rev-list --left-right --count HEAD...@{u}`, { allowError: true });
-    if (!out) return { ahead: 0, behind: 0, hasUpstream: true };
-    const [ahead, behind] = out.split(/\s+/).map(Number);
-    return { ahead, behind, hasUpstream: true };
+    const { getBranchState } = require('./git-state');
+    const b = getBranchState();
+    if (!b.upstream) return { ahead: 0, behind: 0, hasUpstream: false };
+    if (b.gone) return { ahead: 0, behind: 0, hasUpstream: false };
+    return { ahead: b.ahead, behind: b.behind, hasUpstream: true };
   } catch {
-    return { ahead: 0, behind: 0, hasUpstream: false };
+    // Fallback to legacy @{u} parsing if git-state fails (e.g. in bare repo tests)
+    try {
+      const upstream = getUpstream();
+      if (!upstream) return { ahead: 0, behind: 0, hasUpstream: false };
+      const out = runGit(`rev-list --left-right --count HEAD...@{u}`, { allowError: true });
+      if (!out) return { ahead: 0, behind: 0, hasUpstream: true };
+      const [ahead, behind] = out.split(/\s+/).map(Number);
+      return { ahead, behind, hasUpstream: true };
+    } catch {
+      return { ahead: 0, behind: 0, hasUpstream: false };
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const { ensureGitRepo, runGit } = require('../utils/git');
+const { UserError } = require('../utils/errors');
 
 function getReflog(limit) {
   const raw = runGit(['reflog', '--date=relative', '--format=%H%x09%gd%x09%gs', '-n', String(limit)], { raw: true }) || '';
@@ -47,15 +48,13 @@ function listRescue(opts) {
 function recoverRescue(ref) {
   const sha = runGit(['rev-parse', '--verify', `${ref}^{commit}`], { allowError: true });
   if (!sha) {
-    console.error(chalk.red(`✖ Not a commit: ${ref}`));
-    process.exit(1);
+    throw new UserError(`Not a commit: ${ref}`);
   }
   const short = sha.slice(0, 7);
   const branchName = `rescue/${short}`;
   const exists = runGit(['rev-parse', '--verify', `refs/heads/${branchName}`], { allowError: true }) !== null;
   if (exists) {
-    console.error(chalk.red(`✖ Branch ${branchName} already exists — merge/finish it, then rerun.`));
-    process.exit(1);
+    throw new UserError(`Branch ${branchName} already exists — merge/finish it, then rerun.`);
   }
   runGit(['branch', branchName, sha]);
   console.log(chalk.green(`✔ Created branch ${chalk.bold(branchName)} at ${short}`));

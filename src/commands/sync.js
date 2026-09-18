@@ -19,7 +19,7 @@ const sync = new Command('sync')
       const secs = parseInt(opts.watch === true ? '300' : String(opts.watch), 10) || 300;
       console.log(chalk.bold.cyan(`▸ sync watch — every ${secs}s (ctrl+C to stop)`));
       const poll = async () => {
-        try { runGit('fetch --dry-run', { allowError:true }); } catch {}
+        try { runGit('fetch --prune', { allowError:true }); } catch {}
         const { ahead, behind, hasUpstream } = getAheadBehind();
         if (!hasUpstream) console.log(chalk.yellow('No upstream'));
         else if (behind>0) { console.log(chalk.magenta(`↓ ${behind} behind — run sg sync${opts.auto? ' (auto)':''}`)); if(opts.auto){ try{ runGit('pull --rebase --autostash'); console.log(chalk.green('✔ auto-pulled')); }catch(e){ console.log(chalk.red('auto-pull failed')); } } }

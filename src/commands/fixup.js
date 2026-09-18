@@ -3,6 +3,7 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const { ensureGitRepo, runGit } = require('../utils/git');
 const { getOperationState } = require('../utils/git-state');
+const { UserError } = require('../utils/errors');
 
 const fixup = new Command('fixup')
   .description('Create a fixup commit and autosquash it into history (improves `git commit --fixup` + `git rebase -i --autosquash`)')
@@ -15,20 +16,17 @@ const fixup = new Command('fixup')
 
     const op = getOperationState();
     if (op.operation) {
-      console.error(chalk.red(`✖ Cannot fixup while a ${op.operation} is in progress — resolve and ${chalk.cyan('sg continue')} or ${chalk.cyan('sg abort')} first.`));
-      process.exit(1);
+      throw new UserError(`Cannot fixup while a ${op.operation} is in progress — resolve and sg continue or sg abort first.`);
     }
 
     const sha = runGit(['rev-parse', '--verify', `${commitish}^{commit}`], { allowError: true });
     if (!sha) {
-      console.error(chalk.red(`✖ Not a commit: ${commitish}`));
-      process.exit(1);
+      throw new UserError(`Not a commit: ${commitish}`);
     }
     const short = sha.slice(0, 7);
     const isAncestor = runGit(['merge-base', '--is-ancestor', sha, 'HEAD'], { allowError: true }) !== null;
     if (!isAncestor) {
-      console.error(chalk.red(`✖ ${short} is not in the current branch history — fixup must target a commit on this branch (or run it from that branch).`));
-      process.exit(1);
+      throw new UserError(`${short} is not in the current branch history — fixup must target a commit on this branch (or run it from that branch).`);
     }
 
     // mirror commit -m staging: prefer existing staged, else auto-stage all with a hint

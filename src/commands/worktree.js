@@ -2,6 +2,7 @@ const { Command } = require('commander');
 const chalk = require('chalk');
 const { ensureGitRepo, runGit } = require('../utils/git');
 const { spawnSync } = require('child_process');
+const { UserError } = require('../utils/errors');
 
 const worktree = new Command('worktree')
   .description('Worktree helpers — parallel review without switching branches (AU4)')
@@ -21,28 +22,22 @@ const worktree = new Command('worktree')
       return;
     }
     if (act === 'add') {
-      if (!pathArg) { console.error(chalk.red('✖ sg worktree add <path> --branch <name>')); process.exit(1); }
+      if (!pathArg) { throw new UserError('sg worktree add <path> --branch <name>'); }
       const branch = opts.branch;
-      const args = ['worktree','add'];
-      if (branch) args.push('-b', branch);
-      args.push(pathArg);
-      if (branch) args.push(branch); // fallback if -b not needed? git worktree add -b <branch> <path>
-      // correct order: git worktree add -b <branch> <path>
       const final = branch ? ['worktree','add','-b',branch,pathArg] : ['worktree','add',pathArg];
       const r = spawnSync('git', final, { stdio:'inherit' });
-      if (r.status!==0) process.exit(r.status||1);
+      if (r.status!==0) throw new UserError(`git command failed (${r.status})`);
       console.log(chalk.green(`✔ Worktree at ${pathArg}${branch?` branch ${branch}`:''}`));
       return;
     }
     if (act === 'remove' || act === 'rm') {
-      if (!pathArg) { console.error(chalk.red('✖ sg worktree remove <path>')); process.exit(1); }
+      if (!pathArg) { throw new UserError('sg worktree remove <path>'); }
       const args = ['worktree','remove', ...(opts.force?['--force']:[]), pathArg];
       const r = spawnSync('git', args, { stdio:'inherit' });
-      if (r.status!==0) process.exit(r.status||1);
+      if (r.status!==0) throw new UserError(`git command failed (${r.status})`);
       console.log(chalk.green(`✔ Removed worktree ${pathArg}`));
       return;
     }
-    console.error(chalk.red(`✖ Unknown action "${act}" — use add|list|remove`));
-    process.exit(1);
+    throw new UserError(`Unknown action "${act}" — use add|list|remove`);
   });
 module.exports = worktree;

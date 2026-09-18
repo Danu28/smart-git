@@ -3,6 +3,7 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const { ensureGitRepo, runGit, getCurrentBranch } = require('../utils/git');
 const { BRANCH_PREFIXES } = require('../utils/config');
+const { DEFAULT_PROTECTED_BRANCHES } = require('../utils/constants');
 
 function inferPrefix(name, config) {
   const lower = (name||'').toLowerCase();
@@ -35,7 +36,7 @@ const branch = new Command('branch')
       console.log(chalk.yellow('→ sg branch --prune → sg tidy --merged'));
       const current = getCurrentBranch();
       const mergedRaw = runGit('branch --merged', { allowError: true }) || '';
-      const candidates = mergedRaw.split('\n').map(b=>b.replace('*','').trim()).filter(b=>b && b!==current && !['main','master','develop','dev'].includes(b));
+      const candidates = mergedRaw.split('\n').map(b=>b.replace('*','').trim()).filter(b=>b && b!==current && !DEFAULT_PROTECTED_BRANCHES.includes(b));
       if (!candidates.length) { console.log(chalk.green('✔ No merged branches to prune.')); return; }
       console.log(chalk.bold(`Merged branches (${candidates.length}):`)); candidates.forEach(b=>console.log(chalk.gray('  • ')+b));
       const { ok } = await inquirer.prompt([{ type:'confirm', name:'ok', message:`Delete ${candidates.length} merged branch(es)?`, default:false }]);

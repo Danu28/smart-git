@@ -2,6 +2,7 @@ const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
 const { ensureGitRepo, runGit, getCurrentBranch } = require('../utils/git');
+const { DEFAULT_PROTECTED_BRANCHES } = require('../utils/constants');
 
 const cleanup = new Command('cleanup')
   .description('Cleanup — delete merged branches, prune remotes, gc (improves `git branch -d` + `git gc`) [deprecated: use sg tidy --merged]')
@@ -15,7 +16,7 @@ const cleanup = new Command('cleanup')
 
     const current = getCurrentBranch();
     const mergedRaw = runGit('branch --merged', { allowError: true }) || '';
-    const candidates = mergedRaw.split('\n').map(b => b.replace('*','').trim()).filter(b => b && b !== current && !['main','master','develop','dev'].includes(b));
+    const candidates = mergedRaw.split('\n').map(b => b.replace('*','').trim()).filter(b => b && b !== current && !DEFAULT_PROTECTED_BRANCHES.includes(b));
 
     const remotePrune = runGit('remote prune origin --dry-run', { allowError: true }) || '';
 

@@ -2,6 +2,7 @@ const { Command } = require('commander');
 const chalk = require('chalk');
 const { ensureGitRepo, runGit } = require('../utils/git');
 const { getOperationState, getUnmergedPaths, OP_CMDS } = require('../utils/git-state');
+const { UserError } = require('../utils/errors');
 
 // `continue` is a reserved word — module var is `continueCmd`.
 const continueCmd = new Command('continue')
@@ -16,8 +17,7 @@ const continueCmd = new Command('continue')
       if (conflicts.length) {
         console.error(chalk.red(`✖ ${conflicts.length} conflicted file(s) with no operation detected.`));
         conflicts.forEach((f) => console.error('  ' + f));
-        console.error(chalk.gray('Resolve them, then finish the merge with ') + chalk.cyan('sg commit') + chalk.gray('.'));
-        process.exit(1);
+        throw new UserError(`${conflicts.length} conflicted file(s) with no operation detected: ${conflicts.join(', ')}. Resolve them, then finish the merge with sg commit.`);
       }
       console.log(chalk.green('✔ Nothing to continue.'));
       return;
@@ -30,8 +30,7 @@ const continueCmd = new Command('continue')
 
     if (conflicts.length) {
       console.error(chalk.red(`✖ ${op.operation} in progress with ${conflicts.length} conflicted file(s) — resolve each, stage it, then re-run sg continue:`));
-      conflicts.forEach((f) => console.error('  ' + f));
-      process.exit(1);
+      throw new UserError(`${op.operation} in progress with ${conflicts.length} conflicted file(s) — resolve each, stage it, then re-run sg continue: ${conflicts.join(', ')}`);
     }
 
     const step = op.step && op.total ? ` (${op.step}/${op.total})` : '';

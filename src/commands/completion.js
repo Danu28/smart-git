@@ -1,4 +1,5 @@
 const { Command } = require('commander');
+const { UserError } = require('../utils/errors');
 const completion = new Command('completion')
   .description('Generate shell completions for smart-git/sg (A3)')
   .argument('[shell]', 'shell: bash|zsh|fish|powershell (default: bash)')
@@ -19,8 +20,7 @@ const completion = new Command('completion')
       console.log(`# PowerShell — add to $PROFILE`);
       console.log(`Register-ArgumentCompleter -CommandName sg,smart-git -ParameterName command -ScriptBlock { param($w,$p,$c); @(${cmds.split(' ').map(c=>`'${c}'`).join(',')}) | Where-Object { $_ -like "$w*" } | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_,$_, 'ParameterValue', $_) } }`);
     } else {
-      console.error(`Unknown shell "${sh}" — use bash|zsh|fish|powershell`);
-      process.exit(1);
+      throw new UserError(`Unknown shell "${sh}" — use bash|zsh|fish|powershell`);
     }
   });
 module.exports = completion;

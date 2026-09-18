@@ -1,5 +1,6 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
+const { UserError } = require('../utils/errors');
 
 // In-terminal playbook. Keep in sync with the README "Playbook" section —
 // both answer "how do I get the most out of sg".
@@ -88,8 +89,7 @@ function printCommandHelp(topic) {
   }
   const cmd = names.get(topic.toLowerCase());
   if (!cmd) {
-    console.error(chalk.red(`✖ Unknown command "${topic}". `) + chalk.cyan('sg --help') + chalk.red(' lists everything.'));
-    process.exit(1);
+    throw new UserError(`Unknown command "${topic}". sg --help lists everything.`);
   }
   console.log(chalk.bold.cyan(`▸ sg ${cmd.name()}`) + chalk.gray(` — ${cmd.description() || ''}`));
   console.log(chalk.gray('─'.repeat(40)));

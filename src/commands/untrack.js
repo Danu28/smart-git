@@ -3,6 +3,7 @@ const chalk = require('chalk');
 const inquirer = require('inquirer');
 const { ensureGitRepo, runGit } = require('../utils/git');
 const { appendPatterns, isDirectoryEntry } = require('../utils/gitignore');
+const { UserError } = require('../utils/errors');
 
 const untrack = new Command('untrack')
   .description('Stop tracking files while keeping them on disk; offers a .gitignore entry (improves `git rm --cached`)')
@@ -19,8 +20,7 @@ const untrack = new Command('untrack')
       else valid.push(p);
     }
     if (!valid.length) {
-      console.error(chalk.red('✖ None of the given paths are tracked.'));
-      process.exit(1);
+      throw new UserError('None of the given paths are tracked.');
     }
 
     console.log(chalk.gray(`→ git rm --cached -r -- ${valid.join(' ')}`));

@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const { ensureGitRepo, runGit } = require('../utils/git');
+const { UserError } = require('../utils/errors');
 
 const why = new Command('why')
   .description('Explain who wrote a file or a specific line — blame without the wall (improves `git blame` + `git log -L`)')
@@ -21,8 +22,7 @@ const why = new Command('why')
 
     const tracked = runGit(['ls-files', '--error-unmatch', '--', file], { allowError: true }) !== null;
     if (!tracked) {
-      console.error(chalk.red(`✖ "${file}" is not a tracked file.`));
-      process.exit(1);
+      throw new UserError(`"${file}" is not a tracked file.`);
     }
 
     console.log(chalk.bold.cyan('▸ smart why: ') + chalk.white(file) + (line ? chalk.gray(`:${line}`) : ''));
@@ -31,8 +31,7 @@ const why = new Command('why')
     if (line) {
       const blame = runGit(['blame', '-L', `${line},${line}`, '--', file], { allowError: true });
       if (!blame || !blame.trim()) {
-        console.error(chalk.red(`✖ Line ${line} is out of range for ${file}.`));
-        process.exit(1);
+        throw new UserError(`Line ${line} is out of range for ${file}.`);
       }
       const first = blame.split('\n')[0];
       const sha = (first.split(' ')[0] || '').slice(0, 7);

@@ -4,39 +4,21 @@ const inquirer = require('inquirer');
 const { ensureGitRepo, runGit, getDiffSummary, getChangedFiles, gitAddFiles, gitAddPatch } = require('../utils/git');
 const { COMMIT_TYPES, smartCommitMessage } = require('../utils/config');
 const { inferCommitSuggestion, aiDraftFallback } = require('../utils/infer');
+const { UserError } = require('../utils/errors');
 
 function normalizeArgs(filesArg, optsArg, cmdArg) {
   let files = [];
   let opts = {};
-  // commander with .argument('[files...]') -> action(files, opts, command)
-  // without files arg, sometimes filesArg is actually opts
   if (Array.isArray(filesArg)) {
     files = filesArg;
-    if (optsArg && typeof optsArg.opts === 'function') {
-      opts = optsArg.opts();
-    } else {
-      opts = optsArg || {};
-    }
+    opts = (optsArg && typeof optsArg.opts === 'function') ? optsArg.opts() : (optsArg || {});
   } else if (filesArg && typeof filesArg === 'object') {
-    // no positional files, first arg is opts or Command
-    if (typeof filesArg.opts === 'function') {
-      opts = filesArg.opts();
-    } else {
-      opts = filesArg;
-    }
-    files = [];
-    // second arg might be Command instance, ignore
-  }
-  // also handle case where optsArg is Command
-  if (optsArg && typeof optsArg.opts === 'function' && !Array.isArray(filesArg)) {
-    // already handled
+    opts = typeof filesArg.opts === 'function' ? filesArg.opts() : filesArg;
   }
   if (cmdArg && typeof cmdArg.opts === 'function') {
     const cmdOpts = cmdArg.opts();
-    // merge if opts missing keys
     opts = { ...cmdOpts, ...opts };
   }
-  // ensure arrays
   if (!Array.isArray(files)) files = [];
   return { files, opts };
 }
@@ -132,8 +114,7 @@ const commit = new Command('commit')
     if (opts.amend) {
       const count = parseInt(runGit('rev-list --count HEAD', { allowError: true }) || '0', 10);
       if (!count) {
-        console.error(chalk.red('✖ Nothing to amend — this repo has no commits yet. Use `sg commit` without --amend.'));
-        process.exit(1);
+        throw new UserError('Nothing to amend — this repo has no commits yet. Use `sg commit` without --amend.');
       }
       // Rewriting already-published history needs an explicit second look.
       const onRemote = runGit('branch -r --contains HEAD', { allowError: true }) || '';
@@ -222,8 +203,8 @@ const commit = new Command('commit')
       const fs = require('fs');
       const os = require('os');
       const path = require('path');
-      const tmp = path.join(os.tmpdir(), `smart-git-msg-${Date.now()}.txt`);
-      fs.writeFileSync(tmp, opts.message);
+      const tmp = path.join(os.tmpdir(), `smart-git-msg-${crypto.randomUUID()}.txt`);
+      fs.writeFileSync(tmp, opts.message, { mode: 0o600 });
       const commitArgs = ['commit', '-F', tmp];
       if (opts.amend) commitArgs.push('--amend');
       if (opts.verify === false) commitArgs.push('--no-verify');
@@ -348,8 +329,8 @@ const commit = new Command('commit')
     const fs = require('fs');
     const os = require('os');
     const path = require('path');
-    const tmp = path.join(os.tmpdir(), `smart-git-${Date.now()}.txt`);
-    fs.writeFileSync(tmp, fullMessage);
+    const tmp = path.join(os.tmpdir(), `smart-git-${crypto.randomUUID()}.txt`);
+    fs.writeFileSync(tmp, fullMessage, { mode: 0o600 });
     const commitArgs2 = ['commit', '-F', tmp];
     if (opts.amend) commitArgs2.push('--amend');
     if (opts.verify === false) commitArgs2.push('--no-verify');
