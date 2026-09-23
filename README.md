@@ -100,6 +100,7 @@ sg stash           # interactive stash manager
 - `sg doctor` — state diagnosis: in-progress rebase/merge/cherry-pick ops with step counts, conflicted files, detached HEAD, gone upstream, stashes, shallow clone
 - `sg clean` — guarded untracked deletion: preview by default, **protected-file guard** (.env, *.pem, *.key, id_rsa, ...) that requires `--force`
 - `sg continue` — resume the in-progress rebase/merge/cherry-pick/revert; refuses while conflicts remain and lists them. `sg abort` — confirm-guarded rollback of the same
+- `sg bisect` — binary search wizard: `sg bisect start [--bad HEAD --good <old> --test "npm test"]`, `sg bisect good|bad|skip`, `sg bisect run "cmd"`, `sg bisect log|visual|reset` (picker when active)
 - `sg fixup <commit>` — `git commit --fixup` then a **non-interactive** `rebase -i --autosquash` (works with no upstream/root commits); `--no-rebase`, `--yes`, `--dry-run`
 - `sg untrack <path...>` — `git rm --cached` keeping files on disk + .gitignore offer (the `.env` fix); `sg ignore [patterns...]` — append with dedupe, warns when a pattern still matches tracked files, `--from-status` checkbox picker
 - `sg pr` — push (sets upstream) + `gh pr create --fill` (`--draft`/`--web`); auto-degrades to a GitHub compare URL when gh is missing; `SMART_GIT_GH` env override for gh shims/alternate installs

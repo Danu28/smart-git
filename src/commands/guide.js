@@ -30,8 +30,10 @@ const SECTIONS = [
     lines: [
       '  sg doctor      # first move when confused: mid-rebase? conflicts? detached? gone upstream?',
       '  sg resolve     # guided conflict resolver: preview + pick ours/theirs per file (checkpointed)',
+      '  sg bisect start          # binary search: find the commit that broke things (good/bad/skip/run)',
+      '  sg bisect good|bad|skip  # mark current commit in bisect (or sg bisect for picker)',
       '  sg continue    # after resolving conflicts: resume whatever rebase/merge/cherry-pick is running',
-      '  sg abort       # roll back the in-progress operation (confirm-guarded)',
+      '  sg abort       # roll back the in-progress operation (confirm-guarded; also sg bisect reset)',
       '  sg undo        # last commit: --soft/--hard/--commit <hash>; sg undo <file> = unstage/discard a file; sg undo . = restore everything; --source <ref> pulls an older revision',
       '  sg rescue      # after reset --hard or branch -D: find ✖ LOST commits, rescue/<hash> branch',
       '  sg fixup <sha> # fix a past commit: fixup! + autosquash in one go',
