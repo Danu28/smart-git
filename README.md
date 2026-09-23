@@ -108,6 +108,7 @@ sg stash           # interactive stash manager
 - `sg commit --amend` — now warns and asks for confirmation when the commit is already pushed
 - `sg diff` — staged/unstaged stats + summary (no wall of text), `--patch` for full diff, `--staged`, `--check`, **`sg diff <ref> [ref2]` for branch/commit comparisons**
 - `sg stash` — interactive, `--push`, `--pop`, `--clear`
+- `sg review` — pre-push gate: secrets/protected files, WIP/TODO, conventional, large blobs >1MB, whitespace, conflict markers (`--staged/--all`, `--strict` for CI, `--fix` hints, `--json`)
 - `sg tidy` — unified cleanup (replaces `cleanup`/`clean`): `--untracked` + `--merged`
 - `sg cleanup` — *deprecated* → `sg tidy --merged` (still works, warns)
 - `sg clean` — *deprecated* → `sg tidy --untracked` (still works, warns)

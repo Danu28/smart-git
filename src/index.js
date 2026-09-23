@@ -52,5 +52,6 @@ lazyAdd('./commands/config');
 lazyAdd('./commands/completion');
 lazyAdd('./commands/init');
 lazyAdd('./commands/worktree');
+lazyAdd('./commands/review');
 
 module.exports = { program };

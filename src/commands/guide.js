@@ -52,6 +52,7 @@ const SECTIONS = [
     lines: [
       '  sg pr           # push + gh pr create --fill (--draft/--web); compare URL without gh',
       '  sg why src/foo.js:12  # who wrote that line and why — blame without the wall',
+      '  sg review       # pre-push gate: secrets, WIP, conventional, large blobs, whitespace (--strict for CI)',
     ],
   },
   {
