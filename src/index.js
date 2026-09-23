@@ -2,7 +2,7 @@ const { Command } = require('commander');
 const pkg = require('../package.json');
 // chalk is light; keep for description. Heavy deps (inquirer, picker) are lazy inside commands.
 let _chalk;
-function chalk() { if (!_chalk) _chalk = require('chalk'); return _chalk; }
+function _getChalk() { if (!_chalk) _chalk = require('chalk'); return _chalk; } void _getChalk;
 
 const program = new Command();
 

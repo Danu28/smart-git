@@ -1,6 +1,5 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const inquirer = require('inquirer');
 const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind, getStatusPorcelain } = require('../utils/git');
 
 const sync = new Command('sync')

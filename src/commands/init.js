@@ -2,7 +2,7 @@ const { Command } = require('commander');
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit } = require('../utils/git');
+const { ensureGitRepo } = require('../utils/git');
 const { getGitDir } = require('../utils/git-state');
 const { UserError } = require('../utils/errors');
 

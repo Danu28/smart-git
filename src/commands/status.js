@@ -50,7 +50,7 @@ const status = new Command('status')
       console.log(chalk.gray('─'.repeat(40)));
       // Pretty print
       lines.forEach(l => {
-        const x = l[0], y = l[1], file = l.slice(3);
+        const x = l[0], y = l[1]; void l.slice(3);
         let icon = ' ';
         let color = chalk.gray;
         if (x === '?' ) { icon = '?'; color = chalk.red; }

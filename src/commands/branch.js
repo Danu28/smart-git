@@ -32,7 +32,7 @@ const branch = new Command('branch')
     ensureGitRepo();
 
     if (opts.prune) {
-      const tidy = require('./tidy');
+      const _tidy = require('./tidy');
       console.log(chalk.yellow('→ sg branch --prune → sg tidy --merged'));
       const current = getCurrentBranch();
       const mergedRaw = runGit('branch --merged', { allowError: true }) || '';

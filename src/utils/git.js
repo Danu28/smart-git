@@ -63,7 +63,7 @@ function ensureGitRepo() {
 }
 
 function runGit(args, options = {}) {
-  const { cwd = process.cwd(), silent = false, allowError = false, raw = false, env } = options;
+  const { cwd = process.cwd(), silent: _silent = false, allowError = false, raw = false, env } = options; void _silent;
   const argv = Array.isArray(args) ? args : shellSplit(String(args));
   const spawnOpts = { cwd, encoding: 'utf8', stdio: 'pipe', maxBuffer: 20 * 1024 * 1024 };
   if (env) spawnOpts.env = { ...process.env, ...env }; // e.g. GIT_EDITOR=true for non-interactive continue/autosquash
@@ -309,6 +309,7 @@ module.exports = {
   isGitRepo,
   ensureGitRepo,
   runGit,
+  invalidateChangedCache,
   shellSplit,
   getCurrentBranch,
   getUpstream,

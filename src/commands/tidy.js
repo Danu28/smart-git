@@ -24,8 +24,8 @@ const tidy = new Command('tidy')
       console.log(chalk.gray('  sg tidy --merged --dry-run'));
       return;
     }
-    let untrackedDone = false;
-    let untrackedCancelled = false;
+    let _untrackedDone = false;
+    let _untrackedCancelled = false;
     if (opts.untracked) {
       const x = opts.ignored ? ' -x' : '';
       const previewRaw = runGit(`clean -n -d${x}`, { allowError: true, raw: true }) || '';
@@ -60,16 +60,16 @@ const tidy = new Command('tidy')
             const { ok } = await inquirer.prompt([{ type:'confirm', name:'ok', message: chalk.red(`Delete ${files.length} untracked file(s)? (irreversible)`), default:false }]);
             if (!ok) {
               console.log(chalk.yellow('Cancelled — untracked not deleted.'));
-              untrackedCancelled = true;
+              _untrackedCancelled = true;
             } else {
               runGit(`clean -fd${x}`);
               console.log(chalk.green(`✔ Tidied ${files.length} untracked file(s)`));
-              untrackedDone = true;
+              _untrackedDone = true;
             }
           } else {
             runGit(`clean -fd${x}`);
             console.log(chalk.green(`✔ Tidied ${files.length} untracked file(s)`));
-            untrackedDone = true;
+            _untrackedDone = true;
           }
         }
       }

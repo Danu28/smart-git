@@ -165,7 +165,7 @@ const commit = new Command('commit')
         }
         const staged = runGit('diff --cached --stat', { allowError: true });
         const unstaged = runGit('diff --stat', { allowError: true });
-        const toCommit = files.length ? `Selected: ${files.join(', ')}` : (staged ? staged : '(no staged — would stage per selection)');
+        const _toCommit = files.length ? `Selected: ${files.join(', ')}` : (staged ? staged : '(no staged — would stage per selection)'); void _toCommit;
         console.log(chalk.gray('Staged would commit:\n' + (staged || '(none)')));
         if (files.length) console.log(chalk.gray(`Selected files: ${files.join(', ')}`));
         else if (unstaged) console.log(chalk.gray('Unstaged (would be staged per selection):\n' + unstaged));

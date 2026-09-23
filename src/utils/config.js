@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const chalk = require('chalk');
-
 // Conventional commit types with emojis and descriptions
 const COMMIT_TYPES = [
   { name: 'feat:     A new feature', value: 'feat' },
