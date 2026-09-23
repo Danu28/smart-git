@@ -108,6 +108,7 @@ sg stash           # interactive stash manager
 - `sg commit --amend` — now warns and asks for confirmation when the commit is already pushed
 - `sg diff` — staged/unstaged stats + summary (no wall of text), `--patch` for full diff, `--staged`, `--check`, **`sg diff <ref> [ref2]` for branch/commit comparisons**
 - `sg stash` — interactive, `--push`, `--pop`, `--clear`
+- `sg checkpoint` / `sg save` / `sg chk` — 1-sec savepoints (named stashes): `sg checkpoint "try X"`, `sg checkpoint --list`, `--restore/--pop/--drop/--diff`, `--clear`, `-u` for untracked
 - `sg review` — pre-push gate: secrets/protected files, WIP/TODO, conventional, large blobs >1MB, whitespace, conflict markers (`--staged/--all`, `--strict` for CI, `--fix` hints, `--json`)
 - `sg tidy` — unified cleanup (replaces `cleanup`/`clean`): `--untracked` + `--merged`
 - `sg cleanup` — *deprecated* → `sg tidy --merged` (still works, warns)
@@ -134,7 +135,7 @@ The same guide is in the terminal: **`sg guide`** (+ `sg guide <command>` for on
 - **Daily golden path:** `sg status` → `sg diff` → `sg commit` → `sg sync`
 - **Commit power moves:** `sg commit -m "fix(ui): x"` (auto-stages if nothing staged), `sg commit src/foo.js` (only that file), `sg commit -p` (patch-stage hunks), `--amend` warns when the commit is already pushed
 - **When things go sideways:** `sg doctor` first (state + next command), `sg continue` / `sg abort` (mid-rebase/merge/cherry-pick), `sg undo` (`sg undo <file>` = unstage/discard a file, `sg undo .` = restore all, `sg undo <file> --source <ref>` = pull an older revision), `sg rescue` (recover lost commits), `sg fixup <sha>` (fix a past commit with autosquash)
-- **Housekeeping:** `sg clean` (preview + protected-file guard), `sg untrack .env` (keep file, stop tracking), `sg ignore "*.log"` (dedupe + tracked warnings), `sg cleanup --dry-run`, `sg stash`
+- **Housekeeping:** `sg checkpoint "try X"` → `sg checkpoint --list` / `--restore`, `sg clean` (preview + protected-file guard), `sg untrack .env` (keep file, stop tracking), `sg ignore "*.log"` (dedupe + tracked warnings), `sg cleanup --dry-run`, `sg stash`
 - **Team:** `sg pr` (push + `gh pr create --fill`, compare URL without gh), `sg why src/foo.js:12` (blame without the wall)
 - **Safety contract:** destructive ops always confirm (`--yes`/`--force` to skip); every mutating command has `--dry-run`; nothing touches the remote except `sync`/`pr`; shell-safe argv everywhere
 

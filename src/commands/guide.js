@@ -41,6 +41,7 @@ const SECTIONS = [
     title: 'Housekeeping',
     lines: [
       '  sg clean        # preview-before-delete untracked cleanup; .env/*.pem/id_rsa need --force',
+      '  sg checkpoint "try X" # 1-sec savepoint (stash w/ name) — list/restore/diff/clear',
       '  sg untrack .env # stop tracking, keep on disk, offers .gitignore',
       '  sg ignore "*.log" # append patterns (dedupe); warns if still tracked',
       '  sg cleanup      # delete merged branches + prune remotes (--dry-run first)',

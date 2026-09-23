@@ -53,5 +53,6 @@ lazyAdd('./commands/completion');
 lazyAdd('./commands/init');
 lazyAdd('./commands/worktree');
 lazyAdd('./commands/review');
+lazyAdd('./commands/checkpoint');
 
 module.exports = { program };
