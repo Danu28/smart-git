@@ -97,7 +97,7 @@ function stageFiles(selectedFiles, opts) {
 const commit = new Command('commit')
   .description('Smart commit — conventional commits, interactive, auto-stage, selective files (improves `git commit`)')
   .alias('c')
-  .argument('[files...]', 'specific files to commit (e.g. sg commit src/foo.js or sg commit -m \"feat: msg\" file1 file2)')
+  .argument('[files...]', 'specific files to commit (e.g. sg commit src/foo.js or sg commit -m "feat: msg" file1 file2)')
   .option('-m, --message <msg>', 'commit message directly (bypass prompts)')
   .option('-a, --all', 'stage all modified files (overrides selective)')
   .option('-p, --patch', 'interactive patch staging (git add -p)')
@@ -195,7 +195,7 @@ const commit = new Command('commit')
         if (!staged) {
           // No staged, need to determine if we should auto-stage all or prompt?
           // For -m without files, preserve legacy auto-stage-all with hint
-          console.log(chalk.yellow('No staged changes — staging all (use `sg commit -m \"msg\" <files>` or `git add <file>` to control staging, or --all)'));
+          console.log(chalk.yellow('No staged changes — staging all (use `sg commit -m "msg" <files>` or `git add <file>` to control staging, or --all)'));
           runGit('add -A');
         }
         // else use existing staged

@@ -16,10 +16,10 @@ const init = new Command('init')
     if (!gitDir) { throw new UserError('No .git dir'); }
     const hooksDir = path.join(gitDir, 'hooks');
     fs.mkdirSync(hooksDir, { recursive: true });
-    const hasHooks = opts.hooks;
+    const _hasHooks = opts.hooks;
     if (opts.hooks === false) {
       // remove
-      ['pre-commit','pre-push','post-merge'].forEach(h=>{
+      ['pre-commit','commit-msg','pre-push','post-merge'].forEach(h=>{
         const p = path.join(hooksDir, h);
         try { const txt = fs.readFileSync(p,'utf8'); if(txt.includes('smart-git')) fs.unlinkSync(p); } catch {}
       });
@@ -34,12 +34,14 @@ const init = new Command('init')
     }
     // pre-commit: block wip, enforce conventional on staged commit msg? simple check
     const preCommit = `#!/bin/sh\n# smart-git pre-commit — conventional lint\nmsg=$(git log --pretty=%s -1 2>/dev/null || echo "")\nif echo "$msg" | grep -qi "^wip"; then echo "✖ wip not allowed"; exit 1; fi\nexit 0\n`;
+    const commitMsg = `#!/bin/sh\n# smart-git commit-msg — conventional format check\nmsg=$(cat "$1" 2>/dev/null || echo "")\nif echo "$msg" | grep -Eq "^(feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert)(\\(.+\\))?: .+"; then exit 0; fi\necho "⚠ commit message should be conventional: type(scope): subject" >&2\nexit 0\n`;
     const prePush = `#!/bin/sh\n# smart-git pre-push — doctor check\nif git rev-parse --verify HEAD >/dev/null 2>&1; then git diff --name-only --diff-filter=U | grep -q . && { echo "✖ unmerged files"; exit 1; }; fi\nexit 0\n`;
     const postMerge = `#!/bin/sh\n# smart-git post-merge — prune hint\necho "→ smart-git: consider sg tidy --merged"\nexit 0\n`;
     fs.writeFileSync(path.join(hooksDir,'commit-msg'), commitMsg, {mode:0o755});
+    fs.writeFileSync(path.join(hooksDir,'pre-commit'), preCommit, {mode:0o755});
     fs.writeFileSync(path.join(hooksDir,'pre-push'), prePush, {mode:0o755});
     fs.writeFileSync(path.join(hooksDir,'post-merge'), postMerge, {mode:0o755});
-    try { fs.chmodSync(path.join(hooksDir,'commit-msg'),0o755); fs.chmodSync(path.join(hooksDir,'pre-push'),0o755); fs.chmodSync(path.join(hooksDir,'post-merge'),0o755); } catch {}
+    try { fs.chmodSync(path.join(hooksDir,'commit-msg'),0o755); fs.chmodSync(path.join(hooksDir,'pre-commit'),0o755); fs.chmodSync(path.join(hooksDir,'pre-push'),0o755); fs.chmodSync(path.join(hooksDir,'post-merge'),0o755); } catch {}
     console.log(chalk.green('✔ Installed hooks: commit-msg, pre-push, post-merge'));
     console.log(chalk.gray(`  in ${hooksDir}`));
   });

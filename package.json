@@ -17,6 +17,9 @@
   },
   "scripts": {
     "test": "node --test",
+    "test:coverage": "c8 node --test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "start": "node bin/smart-git.js --help"
   },
   "keywords": [
@@ -37,6 +40,10 @@
     "commander": "^11.1.0",
     "inquirer": "^8.2.5"
   },
+  "devDependencies": {
+    "c8": "^8.0.1",
+    "eslint": "^8.57.0"
+  },
   "files": [
     "bin/",
     "src/",
@@ -44,6 +51,6 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.0.0"
   }
 }

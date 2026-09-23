@@ -21,13 +21,18 @@
 
 ## Install — 1 command
 
-### Easiest (from GitHub — no npm publish needed)
+### From npm (recommended)
 ```bash
-npm install -g github:Danu28/smart-git
+npm install -g smart-git
 # now use anywhere:
 smart-git --help
 sg --help
 sg status
+```
+
+### From GitHub (fallback / pre-publish)
+```bash
+npm install -g github:Danu28/smart-git
 ```
 
 ### From source (contributors)
@@ -40,12 +45,14 @@ npm link   # creates global `smart-git` + `sg` aliases
 
 ### Try without install (npx)
 ```bash
+npx smart-git --help
+# or pre-publish:
 npx github:Danu28/smart-git --help
 ```
 
-> Requires `git` and `Node >=14`. Works on Windows/macOS/Linux.
+> Requires `git` and `Node >=16`. Works on Windows/macOS/Linux.
 
-[![npm version](https://img.shields.io/badge/version-1.1.5-blue)]() [![license MIT](https://img.shields.io/badge/license-MIT-green)]() [![public repo](https://img.shields.io/badge/repo-public-brightgreen)]()
+[![npm version](https://img.shields.io/badge/version-2.0.0-blue)](https://www.npmjs.com/package/smart-git) [![ci](https://github.com/Danu28/smart-git/actions/workflows/ci.yml/badge.svg)](https://github.com/Danu28/smart-git/actions/workflows/ci.yml) [![license MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE) [![node >=16](https://img.shields.io/badge/node-%3E%3D16-brightgreen)]()
 
 ## Quick start
 
@@ -101,7 +108,9 @@ sg stash           # interactive stash manager
 - `sg commit --amend` — now warns and asks for confirmation when the commit is already pushed
 - `sg diff` — staged/unstaged stats + summary (no wall of text), `--patch` for full diff, `--staged`, `--check`, **`sg diff <ref> [ref2]` for branch/commit comparisons**
 - `sg stash` — interactive, `--push`, `--pop`, `--clear`
-- `sg cleanup` — prune merged branches + remotes
+- `sg tidy` — unified cleanup (replaces `cleanup`/`clean`): `--untracked` + `--merged`
+- `sg cleanup` — *deprecated* → `sg tidy --merged` (still works, warns)
+- `sg clean` — *deprecated* → `sg tidy --untracked` (still works, warns)
 
 ## Conventional commit format enforced
 
@@ -128,6 +137,20 @@ The same guide is in the terminal: **`sg guide`** (+ `sg guide <command>` for on
 - **Team:** `sg pr` (push + `gh pr create --fill`, compare URL without gh), `sg why src/foo.js:12` (blame without the wall)
 - **Safety contract:** destructive ops always confirm (`--yes`/`--force` to skip); every mutating command has `--dry-run`; nothing touches the remote except `sync`/`pr`; shell-safe argv everywhere
 
+## Migration: `sg tidy` (replaces `sg clean` / `sg cleanup`)
+
+`sg tidy` unifies the two housekeeping commands. Old names still work but print a deprecation warning.
+
+| Before | After |
+|---|---|
+| `sg clean` / `sg clean --dry-run` | `sg tidy --untracked --dry-run` |
+| `sg clean --force` | `sg tidy --untracked --force` |
+| `sg cleanup` / `sg cleanup --dry-run` | `sg tidy --merged --dry-run` |
+| `sg cleanup --yes` | `sg tidy --merged --yes` |
+| `sg tidy --untracked --merged` | both in one run |
+
+> Protected-file guard (`.env`, `*.pem`, `*.key`, `id_rsa` …) applies to `--untracked` only.
+
 ## Development
 
 ```bash
@@ -135,11 +158,22 @@ git clone https://github.com/Danu28/smart-git.git
 cd smart-git
 npm install
 node bin/smart-git.js --help
-npm test            # 83 regression tests (node --test) — tier-1/2/3 + guide suites,
-                    # no-repo guards, selective commit, shell-injection safety, spaces, stash, sync
+npm test              # 111 tests (node --test) — tier-1/2/3 + guide + phase invariants
+npm run test:coverage # c8 coverage (text + lcov)
+npm run lint          # eslint . (Node >=16, CommonJS)
+npm run lint:fix      # auto-fix
 # test inside a temp repo
 mkdir /tmp/test-repo && cd /tmp/test-repo && git init && node /path/to/bin/smart-git.js status
 ```
+
+### Publishing to npm
+
+```bash
+npm version patch|minor|major  # bumps package.json + tags
+npm publish --access public    # requires `npm login` + ownership of `smart-git`
+```
+
+> `smart-git` is not yet published — `npm view smart-git` currently 404s. Until `npm publish` succeeds, install via `github:Danu28/smart-git` as documented above. `package.json:files` is allowlisted to `bin/`, `src/`, `README.md`, `LICENSE`.
 
 > **Shell-safety:** all git subprocesses run through `spawnSync('git', argv)` (no shell string
 > interpolation), so messages like `feat: "quotes" & $chars | ;` and filenames with spaces are
