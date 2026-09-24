@@ -42,7 +42,7 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
-    "inquirer": "^8.2.5"
+    "inquirer": "^14.2.2"
   },
   "devDependencies": {
     "c8": "^10.1.3",
