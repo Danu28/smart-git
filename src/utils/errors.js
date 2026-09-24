@@ -1,3 +1,4 @@
+
 /**
  * UserError — expected, user-facing failures.
  * Thrown instead of process.exit(1) so that:

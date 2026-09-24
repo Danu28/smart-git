@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit } = require('../utils/git');
+const _gitMod = require('../utils/git');
+const { ensureGitRepo, runGit } = _gitMod;
 
 const diff = new Command('diff')
   .description('Smart diff — summary + staged/unstaged split with stats, or ref-to-ref diff (improves `git diff`)')

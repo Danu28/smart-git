@@ -1,6 +1,6 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { runGit } = require('./git');
+const fs = require('fs');
+const path = require('path');
+const { runGit } = require('./git/run');
 
 // Shared repo-state introspection, used by `sg doctor`, `sg status` and any
 // future continue/abort command. Everything here is read-only: we only look

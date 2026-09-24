@@ -1,8 +1,9 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { getOperationState, getUnmergedPaths, OP_CMDS } = require('../utils/git-state');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo, runGit } = _gitMod;
 
 // `continue` is a reserved word — module var is `continueCmd`.
 const continueCmd = new Command('continue')

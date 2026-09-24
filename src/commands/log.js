@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit } = require('../utils/git');
+const _gitMod = require('../utils/git');
+const { ensureGitRepo, runGit } = _gitMod;
 
 const log = new Command('log')
   .description('Smarter git log — graph, conventional grouping, search (improves `git log`)')

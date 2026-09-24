@@ -1,7 +1,8 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit, getStashList, getStatusPorcelain, suggestNextSteps } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { getBranchState } = require('../utils/git-state');
+const { ensureGitRepo, runGit, getStashList, getStatusPorcelain, suggestNextSteps } = _gitMod;
 
 const status = new Command('status')
   .description('Smarter git status — colored, ahead/behind, stash, suggestions (improves `git status`)')

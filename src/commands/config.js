@@ -1,7 +1,8 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { loadAllConfig, setConfig, initConfig, globalConfigPath, repoConfigPath } = require('../utils/config');
+const _configMod = require('../utils/config');
 const { UserError } = require('../utils/errors');
+const { loadAllConfig, setConfig, initConfig, globalConfigPath, repoConfigPath } = _configMod;
 
 const config = new Command('config')
   .description('Manage smart-git config — global + repo (.smartgitrc) (S3)')

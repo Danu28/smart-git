@@ -1,8 +1,9 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
-const { ensureGitRepo, getChangedFiles } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { readPatterns, appendPatterns, findTrackedMatches } = require('../utils/gitignore');
+const { ensureGitRepo, getChangedFiles } = _gitMod;
 
 const ignore = new Command('ignore')
   .description('Add patterns to .gitignore with dedupe and tracked-file warnings (improves editing .gitignore)')

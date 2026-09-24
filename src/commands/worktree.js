@@ -1,8 +1,9 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { spawnSync } = require('child_process');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo, runGit } = _gitMod;
 
 const worktree = new Command('worktree')
   .description('Worktree helpers — parallel review without switching branches (AU4)')

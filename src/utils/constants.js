@@ -1,3 +1,4 @@
+
 const PROTECTED_PATTERNS = [
   /^\.env$/,
   /^\.env\.[\w.-]+$/,

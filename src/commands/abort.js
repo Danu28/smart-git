@@ -1,9 +1,10 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
-const { ensureGitRepo, runGit } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { getOperationState, OP_CMDS } = require('../utils/git-state');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo, runGit } = _gitMod;
 
 const abort = new Command('abort')
   .description('Abort the in-progress rebase/merge/cherry-pick/revert/bisect back to the pre-operation state (improves `git rebase --abort` etc.)')

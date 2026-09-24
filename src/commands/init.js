@@ -2,9 +2,10 @@ const { Command } = require('commander');
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
-const { ensureGitRepo } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { getGitDir } = require('../utils/git-state');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo } = _gitMod;
 
 const init = new Command('init')
   .description('Init helpers — install hooks, setup repo (AU1)')

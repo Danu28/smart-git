@@ -1,7 +1,8 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit, getStashList, getStatusPorcelain } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { getOperationState, getUnmergedPaths, getBranchState, isShallowClone, hasCommits, OP_CMDS } = require('../utils/git-state');
+const { ensureGitRepo, runGit, getStashList, getStatusPorcelain } = _gitMod;
 
 const doctor = new Command('doctor')
   .description('Diagnose repo health — in-progress ops, conflicts, upstream, stashes (improves `git status` + guesswork)')

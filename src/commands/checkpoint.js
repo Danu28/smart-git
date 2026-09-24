@@ -1,8 +1,9 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
-const { ensureGitRepo, runGit, getChangedFiles } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo, runGit, getChangedFiles } = _gitMod;
 
 function slugify(s) {
   return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'checkpoint';

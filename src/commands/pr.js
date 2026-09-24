@@ -1,8 +1,9 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { spawnSync } = require('node:child_process');
-const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind } = require('../utils/git');
+const { spawnSync } = require('child_process');
+const _gitMod = require('../utils/git');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind } = _gitMod;
 
 function ghBin() {
   const raw = process.env.SMART_GIT_GH || 'gh';

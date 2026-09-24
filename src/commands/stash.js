@@ -1,7 +1,8 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
-const { ensureGitRepo, runGit } = require('../utils/git');
+const _gitMod = require('../utils/git');
+const { ensureGitRepo, runGit } = _gitMod;
 
 const stash = new Command('stash')
   .description('Smart stash — interactive list, push, pop, apply, drop (improves `git stash`)')

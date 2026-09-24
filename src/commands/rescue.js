@@ -1,7 +1,8 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo, runGit } = _gitMod;
 
 function getReflog(limit) {
   const raw = runGit(['reflog', '--date=relative', '--format=%H%x09%gd%x09%gs', '-n', String(limit)], { raw: true }) || '';

@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind, getStatusPorcelain } = require('../utils/git');
+const _gitMod = require('../utils/git');
+const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind, getStatusPorcelain } = _gitMod;
 
 const sync = new Command('sync')
   .description('Smart sync — stash, pull --rebase, push with upstream setup (improves `git pull`/`push`)')

@@ -1,7 +1,8 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind, getStatusPorcelain } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind, getStatusPorcelain } = _gitMod;
 
 const switc = new Command('switch')
   .description('Smart switch — jump between branches with sync info (improves `git switch`/`checkout`)')

@@ -2,9 +2,10 @@ const { Command } = require('commander');
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
-const { ensureGitRepo, runGit, getChangedFiles } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { isProtected } = require('../utils/constants');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo, runGit, getChangedFiles } = _gitMod;
 
 const CONVENTIONAL_RE = /^(feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert)(\(.+\))?: .+/;
 const LARGE_BYTES = 1 * 1024 * 1024; // 1MB

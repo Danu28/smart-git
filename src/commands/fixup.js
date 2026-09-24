@@ -1,9 +1,10 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
-const { ensureGitRepo, runGit } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { getOperationState } = require('../utils/git-state');
 const { UserError } = require('../utils/errors');
+const { ensureGitRepo, runGit } = _gitMod;
 
 const fixup = new Command('fixup')
   .description('Create a fixup commit and autosquash it into history (improves `git commit --fixup` + `git rebase -i --autosquash`)')

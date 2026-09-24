@@ -13,9 +13,15 @@
     "no-console": "off",
     "no-empty": ["error", { "allowEmptyCatch": true }],
     "prefer-const": "warn",
-    "no-var": "warn",
+    "no-var": "error",
     "no-useless-escape": "off",
-    "no-regex-spaces": "off"
+    "no-regex-spaces": "off",
+    "eqeqeq": ["warn", "smart"],
+    "curly": ["warn", "multi-line"],
+    "no-throw-literal": "warn",
+    "no-implicit-coercion": "warn",
+    "prefer-template": "warn",
+    "no-return-await": "warn"
   },
   "overrides": [
     {

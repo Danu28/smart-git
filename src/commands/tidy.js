@@ -1,9 +1,10 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
-const { ensureGitRepo, runGit, getCurrentBranch } = require('../utils/git');
+const _gitMod = require('../utils/git');
 const { UserError } = require('../utils/errors');
 const { isProtected, DEFAULT_PROTECTED_BRANCHES } = require('../utils/constants');
+const { ensureGitRepo, runGit, getCurrentBranch } = _gitMod;
 
 // Unified tidy — replaces clean (untracked) + cleanup (merged) naming debt (D2)
 // sg tidy --untracked  => clean logic, sg tidy --merged => cleanup logic

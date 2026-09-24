@@ -1,5 +1,5 @@
-// Inference helpers for Smart Commit v2 — type/scope from diff + branch
 const path = require('path');
+// Inference helpers for Smart Commit v2 — type/scope from diff + branch
 
 function inferTypeFromBranch(branch) {
   if (!branch) return null;
