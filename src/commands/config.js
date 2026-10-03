@@ -13,7 +13,7 @@ const config = new Command('config')
   .option('--unset <key>', 'unset a key')
   .option('--init', 'init repo config with defaults')
   .action((opts) => {
-    const useGlobal = !!opts.global;
+    const useGlobal = Boolean(opts.global);
     if (opts.init) {
       const cfg = initConfig();
       console.log(chalk.green('✔ Initialized .smartgitrc'));

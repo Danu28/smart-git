@@ -17,7 +17,7 @@ const continueCmd = new Command('continue')
     if (!op.operation) {
       if (conflicts.length) {
         console.error(chalk.red(`✖ ${conflicts.length} conflicted file(s) with no operation detected.`));
-        conflicts.forEach((f) => console.error('  ' + f));
+        conflicts.forEach((f) => console.error(`  ${  f}`));
         throw new UserError(`${conflicts.length} conflicted file(s) with no operation detected: ${conflicts.join(', ')}. Resolve them, then finish the merge with sg commit.`);
       }
       console.log(chalk.green('✔ Nothing to continue.'));

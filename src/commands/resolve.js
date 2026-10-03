@@ -60,8 +60,8 @@ const resolve = new Command('resolve')
     ensureGitRepo();
     const options = opts && typeof opts.opts === 'function' ? opts.opts() : opts;
     const filterFiles = Array.isArray(files) ? files : [];
-    const useOurs = !!options.ours;
-    const useTheirs = !!options.theirs;
+    const useOurs = Boolean(options.ours);
+    const useTheirs = Boolean(options.theirs);
     if (useOurs && useTheirs) {
       throw new UserError('Use either --ours or --theirs, not both.');
     }

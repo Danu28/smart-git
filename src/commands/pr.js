@@ -22,11 +22,11 @@ function printDegrade(branch) {
     const [, owner, repo] = match;
     const headRef = runGit('symbolic-ref refs/remotes/origin/HEAD', { allowError: true });
     const base = headRef ? headRef.replace(/^refs\/remotes\/origin\//, '') : 'main';
-    console.log('  ' + chalk.cyan(`https://github.com/${owner}/${repo}/compare/${base}...${branch}?expand=1`));
+    console.log(`  ${  chalk.cyan(`https://github.com/${owner}/${repo}/compare/${base}...${branch}?expand=1`)}`);
   } else {
     console.log(chalk.gray(`  Could not build a compare URL from remote: ${url || '(none)'}`));
   }
-  console.log('  Install gh to get PRs from the CLI: ' + chalk.cyan('https://cli.github.com') + '.');
+  console.log(`  Install gh to get PRs from the CLI: ${  chalk.cyan('https://cli.github.com')  }.`);
 }
 
 function spawnGh(args, opts = {}) {

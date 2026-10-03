@@ -135,11 +135,11 @@ const review = new Command('review')
         const icon = i.severity === 'error' ? '✖' : '⚠';
         const file = i.file ? chalk.gray(` (${i.file})`) : '';
         // split multiline messages
-        const msg = i.message.split('\n').map((l,idx)=> idx===0 ? l : '    '+l).join('\n');
+        const msg = i.message.split('\n').map((l,idx)=> idx===0 ? l : `    ${l}`).join('\n');
         console.log(col(`  ${icon} [${i.rule}] ${msg}${file}`));
       }
       console.log(chalk.gray('─'.repeat(40)));
-      if (errors) console.log(chalk.red(`✖ ${errors} error(s)` + (warns? chalk.yellow(`, ${warns} warning(s)`):'')));
+      if (errors) console.log(chalk.red(`✖ ${errors} error(s)${  warns? chalk.yellow(`, ${warns} warning(s)`):''}`));
       else console.log(chalk.yellow(`⚠ ${warns} warning(s)`));
       if (opts.fix) {
         console.log(chalk.gray('Hints:'));
@@ -154,7 +154,7 @@ const review = new Command('review')
     }
     console.log(chalk.gray('─'.repeat(40)));
     if (!opts.dryRun && (errors || (opts.strict && warns))) {
-      throw new UserError(`${errors ? errors+' error(s)' : warns+' warning(s)'} — review ${errors?'failed':'strict failed'}`);
+      throw new UserError(`${errors ? `${errors} error(s)` : `${warns} warning(s)`} — review ${errors?'failed':'strict failed'}`);
     }
   });
 

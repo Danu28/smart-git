@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const _gitMod = require('../utils/git');
+const { invalidateBranchCache } = require('../utils/git-state');
 const { ensureGitRepo, runGit, getCurrentBranch, getAheadBehind, getStatusPorcelain } = _gitMod;
 
 const sync = new Command('sync')
@@ -34,7 +35,7 @@ const sync = new Command('sync')
     ensureGitRepo();
     const branch = getCurrentBranch();
     const { ahead, behind, hasUpstream } = getAheadBehind();
-    const dirty = !!getStatusPorcelain().trim();
+    const dirty = Boolean(getStatusPorcelain().trim());
 
     console.log(chalk.bold.cyan(`▸ smart sync — branch ${chalk.green(branch)}`));
     console.log(chalk.gray('─'.repeat(40)));
@@ -71,6 +72,7 @@ const sync = new Command('sync')
 
       console.log(chalk.gray('→ git fetch --prune'));
       const fetched = runGit('fetch --prune', { allowError: true });
+      invalidateBranchCache();
       if (fetched === null) {
         console.log(chalk.yellow('  (no remote or fetch failed — continuing)'));
       }
@@ -102,7 +104,7 @@ const sync = new Command('sync')
         } catch (e) {
           console.error(chalk.red('✖ Pull failed (conflict?)'));
           console.error(chalk.gray(e.message));
-          console.log(chalk.yellow('Resolve conflicts then run: ') + chalk.cyan('git rebase --continue') + ' or ' + chalk.cyan('sg undo'));
+          console.log(`${chalk.yellow('Resolve conflicts then run: ') + chalk.cyan('git rebase --continue')  } or ${  chalk.cyan('sg undo')}`);
           if (stashed) console.log(chalk.gray('Your local changes are stashed. Restore with: git stash pop'));
           return;
         }

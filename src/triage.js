@@ -68,7 +68,7 @@ function renderTriage(program) {
     const b = state.branchState;
     console.log(chalk.bold.cyan('▸ smart-git triage — you have changes'));
     console.log(chalk.gray('─'.repeat(40)));
-    console.log(`  ${chalk.yellow(state.dirtyCount + ' file(s)')} ${state.changedFiles.length ? chalk.gray(state.changedFiles.join(', ')) : ''} ${state.dirtyCount > 5 ? chalk.gray(`+${state.dirtyCount - 5} more`) : ''}`);
+    console.log(`  ${chalk.yellow(`${state.dirtyCount  } file(s)`)} ${state.changedFiles.length ? chalk.gray(state.changedFiles.join(', ')) : ''} ${state.dirtyCount > 5 ? chalk.gray(`+${state.dirtyCount - 5} more`) : ''}`);
     if (b.behind) console.log(chalk.magenta(`  ↓ ${b.behind} behind`));
     if (b.ahead) console.log(chalk.yellow(`  ↑ ${b.ahead} ahead`));
     console.log(`  ${chalk.cyan('1')} sg status  — see what changed`);

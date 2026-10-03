@@ -29,7 +29,7 @@ function appendPatterns(patterns, cwd = process.cwd()) {
     else { set.add(norm); added.push(norm); }
   }
   if (added.length) {
-    fs.appendFileSync(getIgnorePath(cwd), (current.length ? '\n' : '') + added.join('\n') + '\n');
+    fs.appendFileSync(getIgnorePath(cwd), `${(current.length ? '\n' : '') + added.join('\n')  }\n`);
   }
   return { added, existing };
 }
@@ -43,15 +43,15 @@ function findTrackedMatches(pattern, cwd = process.cwd()) {
   const base = String(pattern).replace(/^\/+/, '');
   if (base.includes('*')) {
     const esc = base.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
-    const re = new RegExp('^' + esc + '$');
+    const re = new RegExp(`^${  esc  }$`);
     return files.filter((f) => re.test(f) || re.test(f.split('/').pop()));
   }
-  const dirPrefix = /\/$/.test(base) ? base : base + '/';
+  const dirPrefix = /\/$/.test(base) ? base : `${base  }/`;
   return files.filter((f) => f === base || f.startsWith(dirPrefix));
 }
 
 function isDirectoryEntry(p, cwd = process.cwd()) {
-  try { return fs.statSync(path.join(cwd, p)).isDirectory() && !String(p).endsWith('/') ? String(p) + '/' : String(p); } catch { return String(p); }
+  try { return fs.statSync(path.join(cwd, p)).isDirectory() && !String(p).endsWith('/') ? `${String(p)  }/` : String(p); } catch { return String(p); }
 }
 
 module.exports = { getIgnorePath, readPatterns, appendPatterns, findTrackedMatches, isDirectoryEntry };

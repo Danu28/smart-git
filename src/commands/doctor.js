@@ -37,7 +37,7 @@ const doctor = new Command('doctor')
           const ab = [];
           if (b.behind) ab.push(chalk.magenta(`↓${b.behind} behind`));
           if (b.ahead) ab.push(chalk.yellow(`↑${b.ahead} ahead`));
-          console.log(`${chalk.bold('Upstream:')} ${chalk.green(b.upstream)}${ab.length ? ' — ' + ab.join(' ') : chalk.gray(' — up to date')}`);
+          console.log(`${chalk.bold('Upstream:')} ${chalk.green(b.upstream)}${ab.length ? ` — ${  ab.join(' ')}` : chalk.gray(' — up to date')}`);
         }
       } else {
         console.log(`${chalk.bold('Upstream:')} ${chalk.yellow('none')} → ${chalk.cyan('sg sync')} sets it`);
@@ -48,11 +48,11 @@ const doctor = new Command('doctor')
     if (op.operation) {
       const prog = op.step || op.total ? ` (${op.step}/${op.total})` : '';
       const conf = unmerged.length ? ` — ${unmerged.length} conflicted file(s): ${unmerged.join(', ')}` : '';
-      console.log(`${chalk.bold('Operation:')} ${chalk.red('⚠ ' + op.operation.toUpperCase() + ' in progress' + prog + conf)}`);
+      console.log(`${chalk.bold('Operation:')} ${chalk.red(`⚠ ${  op.operation.toUpperCase()  } in progress${  prog  }${conf}`)}`);
       const nextCmd = OP_CMDS.continue[op.operation] || 'bisect good|bad';
       console.log(chalk.gray('  → next: ') + chalk.cyan(`git ${nextCmd}`));
     } else if (unmerged.length) {
-      console.log(`${chalk.bold('Operation:')} ${chalk.red('⚠ unmerged path(s): ' + unmerged.join(', '))}`);
+      console.log(`${chalk.bold('Operation:')} ${chalk.red(`⚠ unmerged path(s): ${  unmerged.join(', ')}`)}`);
       console.log(chalk.gray('  → resolve, then ') + chalk.cyan('sg commit') + chalk.gray(' or ') + chalk.cyan('git add <file>'));
     } else {
       console.log(`${chalk.bold('Operation:')} ${chalk.green('none ✔')}`);

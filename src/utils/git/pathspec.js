@@ -1,5 +1,4 @@
 const { spawnSync } = require('child_process');
-const { runGit } = require('./run');
 const { getChangedFiles } = require('./status');
 
 function listZ(args) {

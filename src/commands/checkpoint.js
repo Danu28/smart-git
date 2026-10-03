@@ -83,7 +83,7 @@ const checkpoint = new Command('checkpoint')
         return;
       }
       console.log(chalk.yellow(`Found ${cps.length} checkpoint(s):`));
-      cps.forEach(c => console.log(chalk.gray('  ' + c.raw)));
+      cps.forEach(c => console.log(chalk.gray(`  ${  c.raw}`)));
       const { ok } = await inquirer.prompt([{ type: 'confirm', name: 'ok', message: chalk.red(`Clear all ${cps.length} checkpoint(s)?`), default: false }]);
       if (!ok) { console.log(chalk.yellow('Cancelled.')); return; }
       // drop from highest index down to avoid shifting
@@ -124,7 +124,7 @@ const checkpoint = new Command('checkpoint')
     // --restore / --apply / --pop
     const restoreRef = opts.restore || opts.apply || opts.pop;
     if (restoreRef) {
-      const isPop = !!opts.pop;
+      const isPop = Boolean(opts.pop);
       const ref = resolveRef(restoreRef);
       try {
         if (isPop) {
@@ -189,7 +189,7 @@ const checkpoint = new Command('checkpoint')
 
     // picker: show list, let user choose one + action
     console.log(chalk.bold.cyan(`▸ checkpoints — ${cps.length} saved`));
-    cps.forEach(c => console.log(chalk.gray('  ' + c.raw)));
+    cps.forEach(c => console.log(chalk.gray(`  ${  c.raw}`)));
     console.log(chalk.gray('─'.repeat(40)));
 
     const choices = cps.map(c => ({ name: `${c.ref}: ${c.message}`, value: c.ref }));

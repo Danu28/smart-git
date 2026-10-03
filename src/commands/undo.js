@@ -67,7 +67,7 @@ const undo = new Command('undo')
       return;
     }
 
-    const isDirty = !!status.trim();
+    const isDirty = Boolean(status.trim());
     const choices = [
         { name: 'soft  — undo commit, keep staged (safe)', value: 'soft' },
         { name: 'mixed — undo commit, keep unstaged (default git)', value: 'mixed' },

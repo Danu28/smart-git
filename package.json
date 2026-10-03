@@ -17,6 +17,7 @@
   },
   "scripts": {
     "test": "node --test",
+    "test:fast": "node --test --test-concurrency=4",
     "test:coverage": "c8 --check-coverage --lines 60 --branches 50 --functions 55 --statements 60 node --test",
     "test:coverage:ci": "c8 --reporter=text --reporter=lcov node --test",
     "test:coverage:report": "c8 --reporter=text --reporter=lcov --check-coverage --lines 60 --branches 50 node --test",

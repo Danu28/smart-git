@@ -116,7 +116,7 @@ const branch = new Command('branch')
     out.split('\n').forEach(line => {
       if (line.startsWith('*')) console.log(chalk.green.bold(line) + chalk.gray(' ← current'));
       else if (line.trim().startsWith('remotes/')) console.log(chalk.gray(line));
-      else if (line.trim()) console.log(' ' + line.trim());
+      else if (line.trim()) console.log(` ${  line.trim()}`);
     });
     console.log(chalk.gray('─'.repeat(40)));
     console.log(chalk.gray(`Current: ${chalk.green(current)} | Use: ${chalk.cyan('sg branch --create <name>')} or ${chalk.cyan('sg cleanup')}`));

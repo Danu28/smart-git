@@ -56,7 +56,24 @@ function getUnmergedPaths() {
 
 // ── Branch state ──────────────────────────────────────────────────────────
 
+let _branchCache = { value: null, ts: 0, key: null };
+function invalidateBranchCache() { _branchCache = { value: null, ts: 0, key: null }; }
+function _branchCacheKey() {
+  try {
+    const gitDir = getGitDir();
+    if (!gitDir) return null;
+    const headP = path.join(gitDir, 'HEAD');
+    const fetchP = path.join(gitDir, 'FETCH_HEAD');
+    const hm = fs.existsSync(headP) ? fs.statSync(headP).mtimeMs : 0;
+    const fm = fs.existsSync(fetchP) ? fs.statSync(fetchP).mtimeMs : 0;
+    return `${hm}:${fm}:${gitDir}`;
+  } catch { return null; }
+}
+
 function getBranchState() {
+  const k = _branchCacheKey();
+  const now = Date.now();
+  if (k && _branchCache.key === k && (now - _branchCache.ts) < 2000 && _branchCache.value) return _branchCache.value;
   // symbolic-ref -q --short fails (status 1) when HEAD is detached → null.
   const head = runGit('symbolic-ref -q --short HEAD', { allowError: true });
   const detached = head === null;
@@ -82,14 +99,16 @@ function getBranchState() {
     behind = l || 0;
     ahead = r || 0;
   }
-  return { head, detached, short, upstream, gone, ahead, behind };
+  const result = { head, detached, short, upstream, gone, ahead, behind };
+  if (k) _branchCache = { key: k, value: result, ts: Date.now() };
+  return result;
 }
 
 // ── Misc health signals ───────────────────────────────────────────────────
 
 function isShallowClone() {
   const gitDir = getGitDir();
-  return !!(gitDir && exists(path.join(gitDir, 'shallow')));
+  return Boolean(gitDir && exists(path.join(gitDir, 'shallow')));
 }
 
 function hasCommits() {
@@ -121,6 +140,7 @@ module.exports = {
   getRebaseProgress,
   getUnmergedPaths,
   getBranchState,
+  invalidateBranchCache,
   isShallowClone,
   hasCommits,
   OP_CMDS,

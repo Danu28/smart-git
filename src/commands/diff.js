@@ -32,7 +32,7 @@ const diff = new Command('diff')
       else if (opts.staged) console.log(chalk.gray('  (--staged ignored — comparing commits, index not involved)'));
       base.push(...diffRefs);
       const stat = runGit([...base, '--stat'], { allowError: true }) || '(no diff)';
-      console.log(chalk.bold(`Diff ${diffRefs.join(' ')}` + (opts.staged ? ' (staged)' : '') + ':'));
+      console.log(chalk.bold(`Diff ${diffRefs.join(' ')}${  opts.staged ? ' (staged)' : ''  }:`));
       console.log(chalk.yellow(stat));
       console.log(chalk.gray('─'.repeat(40)));
       if (opts.check || opts.stat || !opts.patch) return;
@@ -77,7 +77,7 @@ const diff = new Command('diff')
       const patch = lines.slice(0, 200).join('\n');
       console.log(chalk.gray('─'.repeat(40)));
       console.log(patch);
-      if (lines.length > 200) console.log(chalk.gray('... truncated (200/ ' + lines.length + ' lines), use `git diff` for full patch'));
+      if (lines.length > 200) console.log(chalk.gray(`... truncated (200/ ${  lines.length  } lines), use \`git diff\` for full patch`));
     }
   });
 

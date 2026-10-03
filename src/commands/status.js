@@ -21,7 +21,7 @@ const status = new Command('status')
     const upstream = bState.upstream;
     const ahead = bState.ahead;
     const behind = bState.behind;
-    const hasUpstream = !!bState.upstream && !bState.gone;
+    const hasUpstream = Boolean(bState.upstream) && !bState.gone;
     const porcelain = getStatusPorcelain();
     const stash = getStashList();
 

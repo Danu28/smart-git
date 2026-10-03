@@ -81,14 +81,14 @@ function getAheadBehind() {
 
 function suggestNextSteps(status) {
   const suggestions = [];
-  if (status.includes('??')) suggestions.push('Untracked files → ' + chalk.cyan('sg commit') + ' or ' + chalk.cyan('git add'));
-  if (/^ M|^M/.test(status) || status.includes(' M')) suggestions.push('Modified files → ' + chalk.cyan('sg diff') + ' then ' + chalk.cyan('sg commit'));
-  if (status.includes('UU')) suggestions.push('Merge conflicts → resolve then ' + chalk.cyan('sg commit'));
+  if (status.includes('??')) suggestions.push(`Untracked files → ${  chalk.cyan('sg commit')  } or ${  chalk.cyan('git add')}`);
+  if (/^ M|^M/.test(status) || status.includes(' M')) suggestions.push(`Modified files → ${  chalk.cyan('sg diff')  } then ${  chalk.cyan('sg commit')}`);
+  if (status.includes('UU')) suggestions.push(`Merge conflicts → resolve then ${  chalk.cyan('sg commit')}`);
   const { ahead, behind, hasUpstream } = getAheadBehind();
   if (hasUpstream) {
-    if (behind > 0) suggestions.push(`${behind} commit(s) behind → ` + chalk.cyan('sg sync'));
-    if (ahead > 0) suggestions.push(`${ahead} commit(s) ahead → ` + chalk.cyan('sg sync') + ' to push');
-  } else suggestions.push('No upstream → ' + chalk.cyan('sg sync') + ' will set upstream');
+    if (behind > 0) suggestions.push(`${behind} commit(s) behind → ${  chalk.cyan('sg sync')}`);
+    if (ahead > 0) suggestions.push(`${ahead} commit(s) ahead → ${  chalk.cyan('sg sync')  } to push`);
+  } else suggestions.push(`No upstream → ${  chalk.cyan('sg sync')  } will set upstream`);
   return suggestions;
 }
 
