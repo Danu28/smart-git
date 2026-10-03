@@ -21,6 +21,7 @@ function mkRepo() {
   git('init', '-q');
   git('config', 'user.email', 'test@smart-git.local');
   git('config', 'user.name', 'smart-git test');
+  git('config', 'core.autocrlf', 'false');
   return { dir, git };
 }
 
@@ -32,7 +33,7 @@ const w = (dir, name, content) => {
   fs.mkdirSync(path.dirname(path.join(dir, name)), { recursive: true });
   fs.writeFileSync(path.join(dir, name), content);
 };
-const read = (dir, name) => fs.readFileSync(path.join(dir, name), 'utf8');
+const read = (dir, name) => fs.readFileSync(path.join(dir, name), 'utf8').replace(/\r\n/g, '\n');
 const rm = (dir) => fs.rmSync(dir, { recursive: true, force: true });
 // NOTE: no .trim() — it would eat the leading space (X column) of the first
 // porcelain line, exactly the trap getStatusPorcelain() documents.
@@ -92,7 +93,7 @@ test('undo . restores every tracked change and leaves untracked files alone', as
   assert.deepStrictEqual(porcelain(git), [' M a.txt', '?? loose.txt'], 'kept work change + untouched untracked file');
   assert.strictEqual(read(dir, 'a.txt'), 'a2\n', 'staged-only file was unstaged, work kept');
   assert.strictEqual(read(dir, 'b.txt'), 'b1\n', 'MM file fully reverted (worktree)');
-  assert.strictEqual(git('show', ':b.txt').stdout, 'b1\n', 'MM file fully reverted (index)');
+  assert.strictEqual(git('show', ':b.txt').stdout.replace(/\r\n/g, '\n'), 'b1\n', 'MM file fully reverted (index)');
   assert.strictEqual(read(dir, 'sub/c.txt'), 'c1\n', 'unstaged file reverted');
   assert.strictEqual(read(dir, 'loose.txt'), 'untracked\n', 'untracked file untouched by "."');
   rm(dir);
@@ -234,7 +235,7 @@ test('undo . --worktree restores the worktree from the index, keeping staged wor
 
   assert.strictEqual(r.status, 0, r.stderr);
   assert.strictEqual(read(dir, 'a.txt'), 'a2\n', 'worktree restored from the index');
-  assert.strictEqual(git('show', ':a.txt').stdout, 'a2\n', 'staged change preserved');
+  assert.strictEqual(git('show', ':a.txt').stdout.replace(/\r\n/g, '\n'), 'a2\n', 'staged change preserved');
   rm(dir);
 });
 
@@ -316,7 +317,7 @@ test('undo <file> --source <ref> --staged restores the index only, no confirm', 
   const prompts = await runInteractive(dir, ['undo', 'a.txt', '--source', 'HEAD~1', '--staged'], {});
 
   assert.deepStrictEqual(prompts, [], 'index-only restore needs no confirm');
-  assert.strictEqual(git('show', ':a.txt').stdout, 'v1\n', 'index restored from the old revision');
+  assert.strictEqual(git('show', ':a.txt').stdout.replace(/\r\n/g, '\n'), 'v1\n', 'index restored from the old revision');
   assert.strictEqual(read(dir, 'a.txt'), 'v2\n', 'worktree untouched');
   rm(dir);
 });

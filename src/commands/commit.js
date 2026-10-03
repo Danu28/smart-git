@@ -1,6 +1,7 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const inquirer = require('inquirer');
+const crypto = require('crypto');
 const { ensureGitRepo, runGit, getDiffSummary, getChangedFiles, gitAddFiles, gitAddPatch } = require('../utils/git');
 const { COMMIT_TYPES, smartCommitMessage } = require('../utils/config');
 const { inferCommitSuggestion, aiDraftFallback } = require('../utils/infer');
