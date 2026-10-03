@@ -22,6 +22,7 @@ function mkRepo() {
   git('init', '-q');
   git('config', 'user.email', 'test@smart-git.local');
   git('config', 'user.name', 'smart-git test');
+  git('config', 'core.autocrlf', 'false');
   return { dir, git };
 }
 
@@ -141,8 +142,8 @@ test('undo <file> "discard all" on a staged+unstaged file truly discards index A
 
   const status = git('status', '--porcelain').stdout;
   assert.doesNotMatch(status, /a\.txt/, 'file fully reverted');
-  assert.strictEqual(git('show', ':a.txt').stdout, 'a\n', 'index copy reverted too');
-  assert.strictEqual(fs.readFileSync(path.join(dir, 'a.txt'), 'utf8'), 'a\n', 'worktree reverted too');
+  assert.strictEqual(git('show', ':a.txt').stdout.replace(/\r\n/g, '\n'), 'a\n', 'index copy reverted too');
+  assert.strictEqual(fs.readFileSync(path.join(dir, 'a.txt'), 'utf8').replace(/\r\n/g, '\n'), 'a\n', 'worktree reverted too');
   assert.strictEqual(git('diff', '--cached', '--stat').stdout.trim(), '', 'nothing staged');
 });
 

@@ -18,6 +18,7 @@ function mkRepo() {
   git('init', '-q');
   git('config', 'user.email', 'test@smart-git.local');
   git('config', 'user.name', 'smart-git test');
+  git('config', 'core.autocrlf', 'false');
   return { dir, git };
 }
 
@@ -226,11 +227,19 @@ test('pr pushes and invokes gh with pr create --fill (SMART_GIT_GH override)', (
   git('remote', 'add', 'origin', bare);
 
   const fakeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sg-fakegh-'));
-  fs.writeFileSync(path.join(fakeDir, 'gh.cmd'), '@echo off\r\necho %* > "%~dp0gh-called.args"\r\necho https://fake.example/pr/1\r\n');
-
-  const r = sgEnv(dir, { SMART_GIT_GH: path.join(fakeDir, 'gh.cmd') }, 'pr');
-  assert.strictEqual(r.status, 0, r.stderr);
+  let fakeGh;
   const argsFile = path.join(fakeDir, 'gh-called.args');
+  if (process.platform === 'win32') {
+    fakeGh = path.join(fakeDir, 'gh.cmd');
+    fs.writeFileSync(fakeGh, '@echo off\r\necho %* > "%~dp0gh-called.args"\r\necho https://fake.example/pr/1\r\n');
+  } else {
+    fakeGh = path.join(fakeDir, 'gh');
+    fs.writeFileSync(fakeGh, `#!/bin/sh\necho "$*" > "${argsFile.replace(/\\/g, '/')}"\necho https://fake.example/pr/1\n`);
+    fs.chmodSync(fakeGh, 0o755);
+  }
+
+  const r = sgEnv(dir, { SMART_GIT_GH: fakeGh }, 'pr');
+  assert.strictEqual(r.status, 0, r.stderr);
   assert.ok(fs.existsSync(argsFile), 'gh was invoked');
   assert.match(fs.readFileSync(argsFile, 'utf8'), /pr create --fill/);
   assert.match(r.stdout, /https:\/\/fake\.example\/pr\/1/); // gh output surfaced
